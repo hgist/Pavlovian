@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pavlovian · A0 · splash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Architects+Daughter&family=Caveat:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #f0eee9; font-family: "Patrick Hand", system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  .stage { min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px; padding: 24px; }
+  .label { font-family: "Architects Daughter", sans-serif;
+    color: #2a2723; font-size: 18px; letter-spacing: 0.5px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+function PhoneFrame({ children, width = 300, height = 620 }) {
+  return (
+    <div style={{
+      width, height,
+      borderRadius: 32,
+      border: '2.5px solid #2a2723',
+      background: '#fbf7ee',
+      boxShadow: '4px 6px 0 rgba(42,39,35,0.12)',
+      padding: '14px 6px 10px',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      fontFamily: '"Patrick Hand", "Comic Sans MS", system-ui, sans-serif',
+    }}>
+      {/* speaker slit */}
+      <div style={{
+        position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+        width: 60, height: 5, borderRadius: 3, border: '1.5px solid #2a2723',
+      }} />
+      {/* status row */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        padding: '8px 14px 2px', fontSize: 11,
+        color: '#6b655c', letterSpacing: 0.5,
+        fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+      }}>
+        <span>9:30</span><span>•••</span><span>▮▮</span>
+      </div>
+      {/* screen */}
+      <div style={{
+        flex: 1,
+        border: '1.5px dashed #b7ad9b',
+        borderRadius: 18,
+        margin: '4px 6px 8px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#fffdf7',
+        position: 'relative',
+      }}>
+        {children}
+      </div>
+      {/* nav pill */}
+      <div style={{
+        width: 90, height: 4, borderRadius: 2,
+        background: '#2a2723', opacity: 0.5,
+        margin: '0 auto',
+      }} />
+    </div>
+  );
+}
+
+// Hand-drawn bell icon (SVG)
+function BellIcon({ size = 80 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none"
+      style={{ display: 'block' }}>
+      {/* Bell body — slightly wobbly path for hand-drawn feel */}
+      <path
+        d="M40 10 C26 10, 18 22, 17 36 C16 46, 14 52, 10 58 L70 58 C66 52, 64 46, 63 36 C62 22, 54 10, 40 10 Z"
+        stroke="#2a2723" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        fill="#e8a07a" fillOpacity="0.25"
+      />
+      {/* Bell top stem */}
+      <path d="M37 10 C37 7, 43 7, 43 10" stroke="#2a2723" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      {/* Clapper */}
+      <circle cx="40" cy="64" r="4.5" stroke="#2a2723" strokeWidth="2" fill="#e8a07a" fillOpacity="0.5"/>
+      {/* Small motion lines — right */}
+      <path d="M68 30 C72 28, 74 24, 73 20" stroke="#2a2723" strokeWidth="1.5" strokeLinecap="round" fill="none" strokeDasharray="2 2"/>
+      {/* Small motion lines — left */}
+      <path d="M12 30 C8 28, 6 24, 7 20" stroke="#2a2723" strokeWidth="1.5" strokeLinecap="round" fill="none" strokeDasharray="2 2"/>
+      {/* Highlight squiggle inside bell */}
+      <path d="M30 38 Q36 34, 42 38 Q48 42, 52 38" stroke="#2a2723" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.3"/>
+    </svg>
+  );
+}
+
+// Three loading dots
+function LoadingDots() {
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{
+          width: 7, height: 7, borderRadius: '50%',
+          background: i === 1 ? '#e8a07a' : '#2a2723',
+          opacity: i === 1 ? 1 : 0.3,
+          border: '1.5px solid #2a2723',
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function SplashScreen() {
+  return (
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '48px 24px 32px',
+      background: '#fffdf7',
+    }}>
+
+      {/* Top spacer */}
+      <div />
+
+      {/* Center: icon + name + tagline */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+
+        {/* Icon container with hand-drawn circle */}
+        <div style={{ position: 'relative' }}>
+          {/* Slightly offset decorative circle behind icon */}
+          <div style={{
+            position: 'absolute',
+            top: 5, left: 5,
+            width: 90, height: 90, borderRadius: '50%',
+            border: '2px dashed #b7ad9b',
+            background: 'transparent',
+          }} />
+          <div style={{
+            width: 90, height: 90, borderRadius: '50%',
+            border: '2.5px solid #2a2723',
+            background: '#fbf7ee',
+            boxShadow: '3px 3px 0 rgba(42,39,35,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative',
+          }}>
+            <BellIcon size={58} />
+          </div>
+        </div>
+
+        {/* App name */}
+        <div style={{
+          fontFamily: '"Architects Daughter", "Patrick Hand", sans-serif',
+          fontSize: 34, color: '#2a2723', letterSpacing: 0.5,
+          textAlign: 'center', lineHeight: 1.1,
+        }}>
+          Pavlovian
+        </div>
+
+        {/* Terracotta underline scribble */}
+        <svg width={120} height={8} viewBox="0 0 120 8" style={{ marginTop: -10 }}>
+          <path d="M4 5 Q30 1, 60 5 T116 4"
+            fill="none" stroke="#e8a07a" strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
+
+        {/* Tagline */}
+        <div style={{
+          fontFamily: '"Patrick Hand", sans-serif',
+          fontSize: 15, color: '#6b655c',
+          textAlign: 'center', lineHeight: 1.4,
+          marginTop: 2,
+        }}>
+          break time reminders
+        </div>
+
+        {/* Author */}
+        <div style={{
+          fontFamily: '"Caveat", cursive',
+          fontSize: 13, color: '#b7ad9b',
+          textAlign: 'center',
+          marginTop: 2,
+          letterSpacing: 0.5,
+        }}>
+          by HST
+        </div>
+
+        {/* Working days badge */}
+        <div style={{
+          marginTop: 4,
+          padding: '5px 14px',
+          border: '1.5px solid #b7ad9b',
+          borderRadius: 999,
+          background: 'transparent',
+          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: 10, color: '#6b655c', letterSpacing: 0.5,
+        }}>
+          Sun · Mon · Tue · Wed · Thu
+        </div>
+      </div>
+
+      {/* Bottom: loading dots + version */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+        <LoadingDots />
+        <div style={{
+          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: 9, color: '#b7ad9b', letterSpacing: 0.8,
+        }}>
+          v 1.0.0
+        </div>
+        {/* Tiny Caveat annotation */}
+        <div style={{
+          fontFamily: '"Caveat", cursive',
+          fontSize: 12, color: '#b7ad9b',
+          transform: 'rotate(-1.5deg)',
+        }}>
+          loading…
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="stage">
+      <div className="label">A0 · splash / startup</div>
+      <PhoneFrame width={300} height={620}>
+        <SplashScreen />
+      </PhoneFrame>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

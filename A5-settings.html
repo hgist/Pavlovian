@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pavlovian · A5 · settings</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Architects+Daughter&family=Caveat:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #f0eee9; font-family: "Patrick Hand", system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  .stage { min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px; padding: 24px; }
+  .label { font-family: "Architects Daughter", sans-serif;
+    color: #2a2723; font-size: 18px; letter-spacing: 0.5px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+function PhoneFrame({ children, width = 300, height = 620 }) {
+  return (
+    <div style={{
+      width, height,
+      borderRadius: 32,
+      border: '2.5px solid #2a2723',
+      background: '#fbf7ee',
+      boxShadow: '4px 6px 0 rgba(42,39,35,0.12)',
+      padding: '14px 6px 10px',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      fontFamily: '"Patrick Hand", "Comic Sans MS", system-ui, sans-serif',
+    }}>
+      <div style={{
+        position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+        width: 60, height: 5, borderRadius: 3, border: '1.5px solid #2a2723',
+      }} />
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        padding: '8px 14px 2px', fontSize: 11,
+        color: '#6b655c', letterSpacing: 0.5,
+        fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+      }}>
+        <span>9:30</span><span>•••</span><span>▮▮</span>
+      </div>
+      <div style={{
+        flex: 1,
+        border: '1.5px dashed #b7ad9b',
+        borderRadius: 18,
+        margin: '4px 6px 8px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#fffdf7',
+        position: 'relative',
+      }}>
+        {children}
+      </div>
+      <div style={{
+        width: 90, height: 4, borderRadius: 2,
+        background: '#2a2723', opacity: 0.5,
+        margin: '0 auto',
+      }} />
+    </div>
+  );
+}
+
+function Checkbox({ checked, small }) {
+  const s = small ? 18 : 22;
+  return (
+    <div style={{
+      width: s, height: s, borderRadius: 5,
+      border: '2px solid #2a2723',
+      background: checked ? '#e8a07a' : 'transparent',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      {checked && (
+        <svg width={s - 8} height={s - 8} viewBox="0 0 14 14">
+          <path d="M2 7 L6 11 L12 3" fill="none" stroke="#2a2723"
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+    </div>
+  );
+}
+
+// Section header with hand-drawn underline
+function SectionHeader({ children }) {
+  return (
+    <div style={{ margin: '14px 14px 6px' }}>
+      <div style={{
+        fontFamily: '"Caveat", cursive',
+        fontSize: 15, color: '#a8401a',
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        transform: 'rotate(-0.8deg)',
+        display: 'inline-block',
+      }}>{children}</div>
+      <div style={{ borderTop: '1.5px dashed #b7ad9b', marginTop: 4 }} />
+    </div>
+  );
+}
+
+// Tappable row with chevron — for time / duration / sound pickers
+function SettingRow({ label, value, mono, accent }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '7px 0',
+      borderBottom: '1px solid rgba(42,39,35,0.08)',
+    }}>
+      <div style={{ fontSize: 13, color: '#2a2723' }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{
+          fontFamily: mono ? '"JetBrains Mono", monospace' : '"Patrick Hand", sans-serif',
+          fontSize: mono ? 14 : 13,
+          color: accent ? '#a8401a' : '#2a2723',
+          fontWeight: mono ? 500 : 400,
+        }}>{value}</div>
+        <div style={{
+          fontFamily: '"Caveat", cursive', fontSize: 16, color: '#b7ad9b',
+        }}>›</div>
+      </div>
+    </div>
+  );
+}
+
+// Break slot configuration card
+function SlotCard({ index, label, time, duration, sound }) {
+  const accent = '#e8a07a';
+  return (
+    <div style={{
+      margin: '0 14px 10px',
+      border: '2px solid #2a2723',
+      borderRadius: 14,
+      background: '#fffdf7',
+      boxShadow: '2px 2px 0 rgba(42,39,35,0.12)',
+      overflow: 'hidden',
+    }}>
+      {/* Slot header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '8px 12px 6px',
+        borderBottom: '1.5px dashed #b7ad9b',
+        background: 'rgba(232,160,122,0.08)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Slot number badge */}
+          <div style={{
+            width: 20, height: 20, borderRadius: '50%',
+            border: '1.5px solid #2a2723',
+            background: accent,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontFamily: '"JetBrains Mono", monospace',
+            color: '#2a2723', fontWeight: 500,
+          }}>{index}</div>
+          <div style={{
+            fontFamily: '"Architects Daughter", sans-serif',
+            fontSize: 14, color: '#2a2723',
+          }}>{label}</div>
+        </div>
+        <div style={{
+          fontFamily: '"Caveat", cursive', fontSize: 13, color: '#6b655c',
+        }}>edit label ›</div>
+      </div>
+      {/* Slot fields */}
+      <div style={{ padding: '2px 12px 4px' }}>
+        <SettingRow label="Break time"  value={time}             mono={true} />
+        <SettingRow label="Duration"    value={`${duration} min`} mono={true} />
+        <SettingRow label="Alert sound" value={sound}            mono={false} accent={true} />
+      </div>
+    </div>
+  );
+}
+
+// Day toggle pill — checked = working day
+function DayPill({ day, active, off }) {
+  return (
+    <div style={{
+      padding: '5px 9px',
+      border: '2px solid #2a2723',
+      borderRadius: 999,
+      background: off ? 'transparent' : (active ? '#2a2723' : 'transparent'),
+      color: off ? '#b7ad9b' : (active ? '#fbf7ee' : '#2a2723'),
+      fontSize: 12,
+      textDecoration: off ? 'line-through' : 'none',
+      fontFamily: off ? '"JetBrains Mono", monospace' : '"Patrick Hand", sans-serif',
+      opacity: off ? 0.6 : 1,
+      flexShrink: 0,
+    }}>{day}</div>
+  );
+}
+
+function SettingsScreen() {
+  const slots = [
+    { index: 1, label: 'Morning Break',   time: '10:00', duration: 20, sound: 'Chime' },
+    { index: 2, label: 'Lunch Break',     time: '12:30', duration: 45, sound: 'Bell' },
+    { index: 3, label: 'Afternoon Break', time: '15:00', duration: 20, sound: 'Chime' },
+  ];
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      {/* Header with back arrow */}
+      <div style={{
+        padding: '14px 18px 8px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        borderBottom: '1.5px dashed #b7ad9b',
+      }}>
+        <div style={{
+          fontFamily: '"Caveat", cursive',
+          fontSize: 18, color: '#6b655c',
+        }}>←</div>
+        <div style={{ flex: 1 }}>
+          <div style={{
+            fontFamily: '"Architects Daughter", "Patrick Hand", sans-serif',
+            fontSize: 20, color: '#2a2723', letterSpacing: 0.3,
+          }}>Settings</div>
+          <div style={{
+            fontSize: 11, color: '#6b655c', marginTop: -1,
+            fontFamily: '"JetBrains Mono", monospace',
+          }}>Pavlovian v1.0.0</div>
+        </div>
+        {/* Gear icon (simple) */}
+        <svg width={22} height={22} viewBox="0 0 22 22" fill="none">
+          <circle cx="11" cy="11" r="3.5" stroke="#2a2723" strokeWidth="1.8"/>
+          <path d="M11 2 L11 4 M11 18 L11 20 M2 11 L4 11 M18 11 L20 11
+                   M4.5 4.5 L6 6 M16 16 L17.5 17.5
+                   M17.5 4.5 L16 6 M6 16 L4.5 17.5"
+            stroke="#2a2723" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      </div>
+
+      {/* Scrollable body */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 16 }}>
+
+        {/* ── Break Slots ── */}
+        <SectionHeader>① Break Slots</SectionHeader>
+        {slots.map(s => (
+          <SlotCard key={s.index} {...s} />
+        ))}
+
+        {/* ── Working Days ── */}
+        <SectionHeader>② Working Days</SectionHeader>
+        <div style={{
+          margin: '0 14px 10px',
+          border: '2px solid #2a2723',
+          borderRadius: 14,
+          padding: '10px 12px',
+          background: '#fffdf7',
+          boxShadow: '2px 2px 0 rgba(42,39,35,0.12)',
+        }}>
+          <div style={{ fontSize: 12, color: '#6b655c', marginBottom: 10 }}>
+            Timers fire on checked days only.
+            Fri &amp; Sat are always off.
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {['Sun','Mon','Tue','Wed','Thu'].map(d => (
+              <DayPill key={d} day={d} active={false} off={false} />
+            ))}
+            <DayPill day="Fri" off={true} />
+            <DayPill day="Sat" off={true} />
+          </div>
+          <div style={{
+            marginTop: 10, fontSize: 11, color: '#6b655c',
+            fontFamily: '"JetBrains Mono", monospace',
+          }}>
+            tap a day to toggle it on / off
+          </div>
+        </div>
+
+        {/* ── Notifications ── */}
+        <SectionHeader>③ Notifications</SectionHeader>
+        <div style={{
+          margin: '0 14px 10px',
+          border: '2px solid #2a2723',
+          borderRadius: 14,
+          padding: '10px 12px',
+          background: '#fffdf7',
+          boxShadow: '2px 2px 0 rgba(42,39,35,0.12)',
+        }}>
+          {/* Test notification button */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '6px 0',
+            borderBottom: '1px solid rgba(42,39,35,0.08)',
+          }}>
+            <div>
+              <div style={{ fontSize: 13, color: '#2a2723' }}>Test notification</div>
+              <div style={{ fontSize: 10, color: '#6b655c', fontFamily: '"JetBrains Mono", monospace' }}>
+                fires a sample alert now
+              </div>
+            </div>
+            <div style={{
+              fontFamily: '"Caveat", cursive', fontWeight: 600,
+              fontSize: 13, color: '#2a2723',
+              border: '1.5px solid #2a2723',
+              borderRadius: 8, padding: '3px 10px',
+              background: 'transparent',
+              boxShadow: '1px 1px 0 rgba(42,39,35,0.2)',
+            }}>▶ test</div>
+          </div>
+          {/* Vibrate toggle */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '8px 0',
+            borderBottom: '1px solid rgba(42,39,35,0.08)',
+          }}>
+            <div style={{ fontSize: 13, color: '#2a2723' }}>Vibrate on alert</div>
+            {/* Mini toggle — ON */}
+            <div style={{
+              width: 38, height: 20, borderRadius: 999,
+              border: '1.5px solid #2a2723',
+              background: '#e8a07a',
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: 1, left: 18,
+                width: 15, height: 15, borderRadius: '50%',
+                background: '#2a2723',
+              }} />
+            </div>
+          </div>
+          {/* LED flash toggle */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '8px 0',
+          }}>
+            <div style={{ fontSize: 13, color: '#2a2723' }}>Flash LED on alert</div>
+            {/* Mini toggle — OFF */}
+            <div style={{
+              width: 38, height: 20, borderRadius: 999,
+              border: '1.5px solid #2a2723',
+              background: 'transparent',
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: 1, left: 2,
+                width: 15, height: 15, borderRadius: '50%',
+                background: '#2a2723',
+              }} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Danger zone ── */}
+        <SectionHeader>④ Reset</SectionHeader>
+        <div style={{ margin: '0 14px 6px', padding: '0 0 4px' }}>
+          {/* Reset all button */}
+          <div style={{
+            border: '2px solid #2a2723',
+            borderRadius: 14,
+            padding: '12px 16px',
+            background: 'rgba(168,64,26,0.07)',
+            boxShadow: '2px 2px 0 rgba(168,64,26,0.2)',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            {/* Warning icon */}
+            <svg width={22} height={22} viewBox="0 0 22 22" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M11 3 L20 19 L2 19 Z"
+                stroke="#a8401a" strokeWidth="2" strokeLinejoin="round"
+                fill="rgba(168,64,26,0.1)"/>
+              <line x1="11" y1="10" x2="11" y2="14" stroke="#a8401a" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="11" cy="17" r="1.2" fill="#a8401a"/>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontFamily: '"Architects Daughter", sans-serif',
+                fontSize: 14, color: '#a8401a',
+              }}>Reset All to Defaults</div>
+              <div style={{ fontSize: 10, color: '#a8401a', marginTop: 1,
+                fontFamily: '"JetBrains Mono", monospace', opacity: 0.7 }}>
+                restores times, durations &amp; sounds
+              </div>
+            </div>
+            <div style={{
+              fontFamily: '"Caveat", cursive', fontSize: 16, color: '#a8401a',
+            }}>›</div>
+          </div>
+
+          {/* Annotation */}
+          <div style={{
+            fontFamily: '"Caveat", cursive',
+            fontSize: 12, color: '#b7ad9b',
+            marginTop: 6, marginLeft: 8,
+            transform: 'rotate(-1deg)',
+            display: 'inline-block',
+          }}>↑ shows a confirm dialog first</div>
+        </div>
+
+      </div>{/* end scroll */}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="stage">
+      <div className="label">A5 · settings / configuration</div>
+      <PhoneFrame width={300} height={620}>
+        <SettingsScreen />
+      </PhoneFrame>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

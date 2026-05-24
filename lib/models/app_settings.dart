@@ -1,0 +1,118 @@
+// Top-level immutable snapshot of all user-configurable state.
+//
+// The Riverpod state we'll set up in Phase 3 will hold an AppSettings
+// and notify listeners whenever it changes. Updates always go via
+// copyWith() — never mutate fields in place.
+
+import 'break_slot.dart';
+import 'break_time.dart';
+import 'weekday.dart';
+
+/// Default alert sound — applied to every slot on first install and
+/// on "Reset All to Defaults".
+const String kDefaultSoundName = 'Chime';
+
+class AppSettings {
+  /// Layer 1 of the enable hierarchy — the global ALL pill switch.
+  /// When false, nothing fires regardless of other settings.
+  final bool globalEnabled;
+
+  /// Layer 2 — per-day master switches. Keyed by every Weekday so the
+  /// map is complete, but only Sun–Thu can ever be true (Fri/Sat are
+  /// permanently off — enforced by isDayEnabled() below).
+  final Map<Weekday, bool> perDayEnabled;
+
+  /// The three break slots (Layer 3 enable lives inside each slot).
+  final List<BreakSlot> slots;
+
+  /// Settings-screen toggles.
+  final bool vibrate;
+  final bool flashLed;
+
+  const AppSettings({
+    required this.globalEnabled,
+    required this.perDayEnabled,
+    required this.slots,
+    required this.vibrate,
+    required this.flashLed,
+  });
+
+  /// Factory defaults — exact spec from CLAUDE.md.
+  /// Used on first install and after "Reset All to Defaults".
+  factory AppSettings.defaults() {
+    return AppSettings(
+      globalEnabled: true,
+      perDayEnabled: const {
+        Weekday.sun: true,
+        Weekday.mon: true,
+        Weekday.tue: true,
+        Weekday.wed: true,
+        Weekday.thu: true,
+        // Fri & Sat intentionally omitted — they're always off.
+      },
+      slots: const [
+        BreakSlot(
+          id: 1,
+          label: 'Morning Break',
+          time: BreakTime(10, 0),
+          durationMinutes: 20,
+          soundName: kDefaultSoundName,
+        ),
+        BreakSlot(
+          id: 2,
+          label: 'Lunch Break',
+          time: BreakTime(12, 30),
+          durationMinutes: 45,
+          soundName: kDefaultSoundName,
+        ),
+        BreakSlot(
+          id: 3,
+          label: 'Afternoon Break',
+          time: BreakTime(15, 0),
+          durationMinutes: 20,
+          soundName: kDefaultSoundName,
+        ),
+      ],
+      vibrate: true,
+      flashLed: false,
+    );
+  }
+
+  AppSettings copyWith({
+    bool? globalEnabled,
+    Map<Weekday, bool>? perDayEnabled,
+    List<BreakSlot>? slots,
+    bool? vibrate,
+    bool? flashLed,
+  }) {
+    return AppSettings(
+      globalEnabled: globalEnabled ?? this.globalEnabled,
+      perDayEnabled: perDayEnabled ?? this.perDayEnabled,
+      slots: slots ?? this.slots,
+      vibrate: vibrate ?? this.vibrate,
+      flashLed: flashLed ?? this.flashLed,
+    );
+  }
+
+  /// Convenience: replace a single slot (identified by id) and return
+  /// a fresh AppSettings. Saves callers from doing list-replace by hand.
+  AppSettings withUpdatedSlot(BreakSlot updated) {
+    return copyWith(
+      slots: slots
+          .map((s) => s.id == updated.id ? updated : s)
+          .toList(growable: false),
+    );
+  }
+
+  /// Number of slots whose per-timer checkbox is currently on.
+  int get enabledSlotCount => slots.where((s) => s.enabled).length;
+
+  /// Layer 2 + the Fri/Sat hard exclusion rolled into one check.
+  bool isDayEnabled(Weekday day) =>
+      day.isWorking && (perDayEnabled[day] ?? false);
+
+  /// True when ALL three layers of the enable hierarchy are ON for the
+  /// given day & slot — i.e. this slot will actually fire that day.
+  bool willFire(Weekday day, BreakSlot slot) =>
+      globalEnabled && isDayEnabled(day) && slot.enabled;
+}

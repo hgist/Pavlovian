@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pavlovian · Dev Setup Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Architects+Daughter&family=Caveat:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f0eee9;
+    font-family: "Patrick Hand", system-ui, sans-serif;
+    color: #2a2723;
+    padding: 40px 24px 60px;
+    max-width: 760px;
+    margin: 0 auto;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* ── Page title ── */
+  h1 {
+    font-family: "Architects Daughter", sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #6b655c;
+    letter-spacing: 0.6px;
+    margin-bottom: 32px;
+  }
+
+  /* ── Section headings ── */
+  h2 {
+    font-family: "Caveat", cursive;
+    font-size: 20px;
+    font-weight: 600;
+    color: #a8401a;
+    margin: 32px 0 10px;
+    transform: rotate(-0.6deg);
+    display: inline-block;
+  }
+  .section-rule {
+    border: none;
+    border-top: 1.5px dashed #b7ad9b;
+    margin: 6px 0 14px;
+  }
+
+  /* ── Short answer banner ── */
+  .banner {
+    border: 2px solid #2a2723;
+    border-radius: 16px;
+    padding: 16px 20px;
+    background: #fffdf7;
+    box-shadow: 3px 3px 0 rgba(42,39,35,0.13);
+    margin-bottom: 28px;
+    font-size: 17px;
+  }
+  .banner strong {
+    font-family: "Architects Daughter", sans-serif;
+    font-size: 18px;
+  }
+
+  /* ── Comparison table ── */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid #2a2723;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fffdf7;
+    box-shadow: 3px 3px 0 rgba(42,39,35,0.12);
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+  thead tr {
+    background: #2a2723;
+    color: #fbf7ee;
+  }
+  thead th {
+    padding: 10px 14px;
+    font-family: "Architects Daughter", sans-serif;
+    font-size: 13px;
+    font-weight: normal;
+    text-align: left;
+    letter-spacing: 0.3px;
+  }
+  tbody tr {
+    border-bottom: 1px dashed #b7ad9b;
+  }
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+  tbody td {
+    padding: 9px 14px;
+    vertical-align: top;
+  }
+  tbody td:first-child {
+    color: #6b655c;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  tbody td:last-child {
+    font-family: "Architects Daughter", sans-serif;
+    font-size: 13px;
+    color: #2a2723;
+  }
+  .tag-vscode {
+    display: inline-block;
+    background: #e8a07a;
+    color: #2a2723;
+    border: 1.5px solid #2a2723;
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+  }
+  .tag-as {
+    display: inline-block;
+    background: transparent;
+    color: #2a2723;
+    border: 1.5px solid #2a2723;
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+  }
+
+  /* ── Callout box (why VS Code wins) ── */
+  .callout {
+    border: 2px solid #2a2723;
+    border-radius: 14px;
+    padding: 14px 18px;
+    background: #fffdf7;
+    box-shadow: 2px 2px 0 rgba(42,39,35,0.12);
+    margin-bottom: 24px;
+  }
+  .callout-title {
+    font-family: "Architects Daughter", sans-serif;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  .callout ul {
+    padding-left: 18px;
+  }
+  .callout li {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #2a2723;
+  }
+  .callout .note {
+    margin-top: 10px;
+    font-family: "Caveat", cursive;
+    font-size: 13px;
+    color: #6b655c;
+    transform: rotate(-0.8deg);
+    display: inline-block;
+  }
+
+  /* ── Step cards ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    border: 2px solid #2a2723;
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: #fffdf7;
+    box-shadow: 2px 2px 0 rgba(42,39,35,0.12);
+  }
+  .step-number {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid #2a2723;
+    background: #e8a07a;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px; font-weight: 500;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-body { flex: 1; min-width: 0; }
+  .step-title {
+    font-family: "Architects Daughter", sans-serif;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .step-desc {
+    font-size: 13px;
+    color: #2a2723;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .step-desc .muted {
+    color: #6b655c;
+    font-size: 12px;
+  }
+
+  /* ── Code blocks ── */
+  pre {
+    background: #2a2723;
+    color: #fbf7ee;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    margin-top: 6px;
+    box-shadow: 2px 2px 0 rgba(42,39,35,0.25);
+    line-height: 1.7;
+  }
+  pre .comment { color: #b7ad9b; }
+  pre .accent  { color: #e8a07a; }
+
+  /* ── What we build first ── */
+  .build-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .build-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid #2a2723;
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: #fffdf7;
+    font-size: 13px;
+  }
+  .build-badge {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    background: transparent;
+    border: 1.5px solid #b7ad9b;
+    border-radius: 999px;
+    padding: 1px 8px;
+    color: #6b655c;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── CTA footer ── */
+  .cta {
+    margin-top: 32px;
+    border: 2px solid #2a2723;
+    border-radius: 16px;
+    padding: 16px 20px;
+    background: rgba(232,160,122,0.12);
+    box-shadow: 3px 3px 0 rgba(42,39,35,0.13);
+    font-family: "Caveat", cursive;
+    font-size: 16px;
+    color: #a8401a;
+  }
+
+  /* ── Scribble underline on h1 ── */
+  .title-wrap { margin-bottom: 6px; }
+  svg.scribble { display: block; margin-top: -4px; }
+</style>
+</head>
+<body>
+
+  <!-- Page title -->
+  <div class="title-wrap">
+    <h1>IDE &amp; Dev Setup Guide</h1>
+    <svg class="scribble" width="220" height="8" viewBox="0 0 220 8">
+      <path d="M2 5 Q55 1, 110 5 T218 4"
+        fill="none" stroke="#e8a07a" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="subtitle">Pavlovian · Flutter/Dart · first-time Android app</div>
+
+  <!-- Short answer -->
+  <div class="banner">
+    Short answer: &nbsp;<strong>VS Code</strong> for writing code &nbsp;·&nbsp;
+    <strong>Android Studio</strong> for the emulator.
+  </div>
+
+  <!-- Comparison table -->
+  <h2>Task split</h2>
+  <hr class="section-rule">
+  <table>
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Tool</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Writing Dart / Flutter code</td>
+        <td><span class="tag-vscode">VS Code</span></td>
+      </tr>
+      <tr>
+        <td>Running the Android emulator</td>
+        <td><span class="tag-as">Android Studio</span> &nbsp;(AVD Manager)</td>
+      </tr>
+      <tr>
+        <td>Hot reload / debug</td>
+        <td><span class="tag-vscode">VS Code</span> &nbsp;via Flutter extension</td>
+      </tr>
+      <tr>
+        <td>Installing packages from pub.dev</td>
+        <td><span class="tag-vscode">VS Code</span> &nbsp;terminal</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Why VS Code -->
+  <h2>Why VS Code wins for Flutter editing</h2>
+  <hr class="section-rule">
+  <div class="callout">
+    <div class="callout-title">Flutter + Dart extensions (by Dart Code) are best-in-class:</div>
+    <ul>
+      <li>Better autocomplete, widget snippets &amp; hot-reload integration than the Android Studio plugin</li>
+      <li>Lighter and faster to open</li>
+      <li>Claude Code runs alongside it naturally</li>
+      <li><code style="font-family:'JetBrains Mono',monospace;font-size:12px">flutter run</code> in the VS Code terminal talks directly to the emulator Android Studio already launched</li>
+    </ul>
+    <div class="note">↑ Android Studio's Flutter plugin exists but feels bolted-on.
+      Most Flutter devs use VS Code day-to-day.</div>
+  </div>
+
+  <!-- Step by step -->
+  <h2>Path forward — step by step</h2>
+  <hr class="section-rule">
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-body">
+        <div class="step-title">Verify your toolchain</div>
+        <div class="step-desc">
+          Run in any terminal. This reports exactly what's missing —
+          missing SDK, unaccepted Android licenses, etc.
+        </div>
+        <pre><span class="accent">flutter</span> doctor</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-body">
+        <div class="step-title">Create a new Flutter project</div>
+        <div class="step-desc">
+          The existing <code style="font-family:'JetBrains Mono',monospace;font-size:12px">Demo_1st_App</code>
+          folder is a native Kotlin project — it can't become a Flutter app.
+          Start fresh:
+        </div>
+        <pre><span class="accent">flutter</span> create pavlovian
+cd pavlovian</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-body">
+        <div class="step-title">Open in VS Code</div>
+        <div class="step-desc">
+          Then install the <strong>Flutter</strong> extension
+          <span class="muted">(id: Dart-Code.flutter)</span> — it pulls in Dart automatically.
+        </div>
+        <pre><span class="accent">code</span> .</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="step-body">
+        <div class="step-title">Launch emulator, then run</div>
+        <div class="step-desc">
+          Start your AVD from Android Studio's Device Manager once,
+          then back in VS Code:
+        </div>
+        <pre><span class="accent">flutter</span> run   <span class="comment"># Flutter finds the running emulator automatically</span></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <div class="step-body">
+        <div class="step-title">Start building — screen by screen</div>
+        <div class="step-desc">
+          Use the wireframes (A0–A5) as the spec. Build one screen at a time,
+          run on emulator, then move on.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- What we build first -->
+  <h2>What we build first</h2>
+  <hr class="section-rule">
+  <div class="build-list">
+    <div class="build-item">
+      <span class="build-badge">step A</span>
+      <div><strong>Data model</strong> — <code style="font-family:'JetBrains Mono',monospace;font-size:12px">BreakSlot</code>
+        class: time, duration, label, enabled flag</div>
+    </div>
+    <div class="build-item">
+      <span class="build-badge">step B</span>
+      <div><strong>Splash screen</strong> (A0) — simplest screen, no logic, just branding</div>
+    </div>
+    <div class="build-item">
+      <span class="build-badge">step C</span>
+      <div><strong>Main screen layout</strong> (A1) — static data first, no real timers yet</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    ✓ Say the word when you're ready and we'll start with the
+    <code style="font-family:'JetBrains Mono',monospace;font-size:14px">flutter doctor</code> output.
+  </div>
+
+</body>
+</html>
