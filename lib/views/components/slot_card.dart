@@ -23,11 +23,16 @@ class SlotCard extends StatelessWidget {
   /// Format: "MM:SS".
   final String? runningRemaining;
 
+  /// Called when the per-timer checkbox is tapped.
+  /// Optional so the card can also render as visual-only.
+  final VoidCallback? onToggleEnabled;
+
   const SlotCard({
     super.key,
     required this.slot,
     required this.dayActuallyOn,
     this.runningRemaining,
+    this.onToggleEnabled,
   });
 
   @override
@@ -71,8 +76,12 @@ class SlotCard extends StatelessWidget {
         child: Row(
           children: [
             // ── Per-slot enable checkbox ──────────────────────────
-            PenCheckbox(checked: slot.enabled, small: true),
-            const SizedBox(width: 10),
+            PenCheckbox(
+              checked: slot.enabled,
+              small: true,
+              onTap: onToggleEnabled,
+            ),
+            const SizedBox(width: 6),
 
             // ── Time + duration stacked ───────────────────────────
             Column(

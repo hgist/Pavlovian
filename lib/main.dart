@@ -1,15 +1,18 @@
 // Pavlovian — main entry point.
 //
-// STEP 5: showing MainScreen directly so we can verify the A1 layout.
-// The splash → main navigation flow will be wired back in a later
-// polish step (the splash widget code is still in views/splash_screen.dart).
+// Step 5: showing MainScreen directly so we can verify the A1 layout.
+// Step 6: wrapped in ProviderScope so Riverpod providers are available
+//         throughout the widget tree.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'views/main_screen.dart';
 
 void main() {
-  runApp(const PavlovianApp());
+  // ProviderScope is the root of all Riverpod state. Every widget below
+  // it (transitively) can read/watch providers via WidgetRef.
+  runApp(const ProviderScope(child: PavlovianApp()));
 }
 
 class PavlovianApp extends StatelessWidget {

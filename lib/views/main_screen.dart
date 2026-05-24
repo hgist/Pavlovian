@@ -1,51 +1,71 @@
-// Main screen — matches the A1-all-on.html wireframe.
+// Main screen — A1/A2/A3/A4 wireframes all reachable from one widget.
 //
-// STEP 5: layout only, using AppSettings.defaults() as static data.
-// No toggles or buttons do anything yet — that's Step 6.
+// Step 6: now a ConsumerWidget — reads AppSettings + selectedDay from
+// Riverpod and passes callbacks down to dumb child widgets. The child
+// widgets stay StatelessWidget so they don't know Riverpod exists —
+// they just receive `bool checked` and `VoidCallback onTap`.
 //
-// Structure:
-//   ┌── header ───────────── Title + subtitle ── [global switch ↓ ALL ON]
-//   ├── day chips row ────── Sun  Mon*  Tue  Wed  Thu   F̶r̶i̶  S̶a̶t̶
-//   ├── day master card ──── ☑ "Monday timers" + pauses-every-timer subtext
-//   ├── legend ────────────── "↓ each break runs every Sun–Thu"
-//   ├── dashed separator
-//   └── slot list ─────────── 3 break cards (Morning shown with running countdown)
-// FAB lives at bottom-right.
+// Interactive transitions:
+//   - Tap global pill switch → A1 ↔ A4
+//   - Tap day master checkbox → A1 ↔ A3
+//   - Tap per-slot checkbox  → A1 ↔ A2 (for that slot)
+//   - Tap a Sun–Thu chip     → switch active day (A1/A3 for that day)
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/app_settings.dart';
 import '../models/weekday.dart';
+import '../viewmodels/selected_day_provider.dart';
+import '../viewmodels/settings_provider.dart';
 import 'components/day_chip.dart';
 import 'components/pen_controls.dart';
 import 'components/slot_card.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends ConsumerWidget {
   const MainScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // ──── Hardcoded demo data for Step 5 ─────────────────────────
-    // Phase 3 (Steps 6–7) will replace this with reactive Riverpod state.
-    final settings = AppSettings.defaults();
-    const today = Weekday.mon;          // pretend today is Monday
-    const runningSlotId = 1;             // Morning Break is "running"
-    const runningRemaining = '16:42';    // demo countdown remaining
-    // ─────────────────────────────────────────────────────────────
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch reactive state — this widget rebuilds whenever either changes.
+    final settings = ref.watch(settingsProvider);
+    final today = ref.watch(selectedDayProvider);
+
+    // Demo running countdown — still hardcoded; wired in Step 13.
+    const runningSlotId = 1;
+    const runningRemaining = '16:42';
 
     final dayActuallyOn =
         settings.globalEnabled && settings.isDayEnabled(today);
+
+    // Notifier — used inside callbacks (read, not watch — we don't
+    // want this widget to rebuild when the notifier instance changes).
+    final settingsNotifier = ref.read(settingsProvider.notifier);
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            _Header(settings: settings, today: today),
-            _DayChipsRow(today: today),
+            _Header(
+              settings: settings,
+              today: today,
+              onToggleGlobal: settingsNotifier.toggleGlobal,
+            ),
+            _DayChipsRow(
+              today: today,
+              globalEnabled: settings.globalEnabled,
+              onSelectDay: (d) =>
+                  ref.read(selectedDayProvider.notifier).state = d,
+            ),
             const SizedBox(height: 4),
-            _DayMasterCard(today: today, dayEnabled: settings.isDayEnabled(today)),
-            const _Legend(),
+            _DayMasterCard(
+              today: today,
+              dayEnabled: settings.isDayEnabled(today),
+              globalEnabled: settings.globalEnabled,
+              onToggleDay: () => settingsNotifier.toggleDay(today),
+            ),
+            _Legend(globalEnabled: settings.globalEnabled),
             const _DashedSeparator(),
             Expanded(
               child: _SlotList(
@@ -53,6 +73,7 @@ class MainScreen extends StatelessWidget {
                 dayActuallyOn: dayActuallyOn,
                 runningSlotId: runningSlotId,
                 runningRemaining: runningRemaining,
+                onToggleSlot: settingsNotifier.toggleSlot,
               ),
             ),
           ],
@@ -72,7 +93,13 @@ class MainScreen extends StatelessWidget {
 class _Header extends StatelessWidget {
   final AppSettings settings;
   final Weekday today;
-  const _Header({required this.settings, required this.today});
+  final VoidCallback onToggleGlobal;
+
+  const _Header({
+    required this.settings,
+    required this.today,
+    required this.onToggleGlobal,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -85,11 +112,10 @@ class _Header extends StatelessWidget {
             : 'paused for ${today.label}';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
+      padding: const EdgeInsets.fromLTRB(18, 14, 14, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Title + subtitle ──
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,10 +138,9 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          // ── Global pill switch + label ──
           Column(
             children: [
-              GlobalSwitch(on: settings.globalEnabled),
+              GlobalSwitch(on: settings.globalEnabled, onTap: onToggleGlobal),
               const SizedBox(height: 2),
               Text(
                 settings.globalEnabled ? 'ALL ON' : 'ALL OFF',
@@ -134,25 +159,39 @@ class _Header extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Horizontal row of day pills (Sun–Thu + struck-out Fri/Sat)
+// Horizontal row of day pills — tappable Sun–Thu + struck Fri/Sat
 // ─────────────────────────────────────────────────────────────────
 class _DayChipsRow extends StatelessWidget {
   final Weekday today;
-  const _DayChipsRow({required this.today});
+  final bool globalEnabled;
+  final ValueChanged<Weekday> onSelectDay;
+
+  const _DayChipsRow({
+    required this.today,
+    required this.globalEnabled,
+    required this.onSelectDay,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
-        itemCount: Weekday.values.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) {
-          final day = Weekday.values[i];
-          return DayChip(day: day, isActive: day == today);
-        },
+    return Opacity(
+      opacity: globalEnabled ? 1.0 : 0.5,
+      child: SizedBox(
+        height: 36,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
+          itemCount: Weekday.values.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 6),
+          itemBuilder: (_, i) {
+            final day = Weekday.values[i];
+            return DayChip(
+              day: day,
+              isActive: day == today,
+              onTap: day.isWorking ? () => onSelectDay(day) : null,
+            );
+          },
+        ),
       ),
     );
   }
@@ -164,55 +203,74 @@ class _DayChipsRow extends StatelessWidget {
 class _DayMasterCard extends StatelessWidget {
   final Weekday today;
   final bool dayEnabled;
-  const _DayMasterCard({required this.today, required this.dayEnabled});
+  final bool globalEnabled;
+  final VoidCallback onToggleDay;
+
+  const _DayMasterCard({
+    required this.today,
+    required this.dayEnabled,
+    required this.globalEnabled,
+    required this.onToggleDay,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: dayEnabled
-            ? AppColors.paperLight
-            : AppColors.ink.withValues(alpha: 0.06),
-        border: Border.all(color: AppColors.ink, width: 2),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.15),
-            offset: const Offset(2, 2),
-            blurRadius: 0,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          PenCheckbox(checked: dayEnabled),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${today.fullName} timers',
-                  style: GoogleFonts.patrickHand(
-                    fontSize: 15,
-                    color: AppColors.ink,
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'pauses every timer just for today',
-                  style: GoogleFonts.patrickHand(
-                    fontSize: 12,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-              ],
+    // Effective on-state: card looks "active" only when both global
+    // and per-day are on. When global is off, the whole card dims
+    // (opacity 0.55) regardless of per-day state — matches A4 wireframe.
+    final dayActuallyOn = globalEnabled && dayEnabled;
+
+    return Opacity(
+      opacity: globalEnabled ? 1.0 : 0.55,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: dayActuallyOn
+              ? AppColors.paperLight
+              : AppColors.ink.withValues(alpha: 0.06),
+          border: Border.all(color: AppColors.ink, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.15),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          children: [
+            PenCheckbox(checked: dayEnabled, onTap: onToggleDay),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${today.fullName} timers',
+                    style: GoogleFonts.patrickHand(
+                      fontSize: 15,
+                      color: AppColors.ink,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dayEnabled
+                        ? 'pauses every timer just for today'
+                        : '✕ paused for today',
+                    style: dayEnabled
+                        ? GoogleFonts.patrickHand(
+                            fontSize: 12, color: AppColors.inkMuted)
+                        : GoogleFonts.caveat(
+                            fontSize: 13, color: AppColors.warning),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -222,21 +280,25 @@ class _DayMasterCard extends StatelessWidget {
 // Legend — the slightly-rotated terracotta annotation
 // ─────────────────────────────────────────────────────────────────
 class _Legend extends StatelessWidget {
-  const _Legend();
+  final bool globalEnabled;
+  const _Legend({required this.globalEnabled});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 4, 18, 4),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Transform.rotate(
-          angle: -0.035, // ≈ -2°
-          child: Text(
-            '↓ each break runs every Sun–Thu',
-            style: GoogleFonts.caveat(
-              fontSize: 14,
-              color: AppColors.warning,
+    return Opacity(
+      opacity: globalEnabled ? 1.0 : 0.5,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 4),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Transform.rotate(
+            angle: -0.035,
+            child: Text(
+              '↓ each break runs every Sun–Thu',
+              style: GoogleFonts.caveat(
+                fontSize: 14,
+                color: AppColors.warning,
+              ),
             ),
           ),
         ),
@@ -246,7 +308,7 @@ class _Legend extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Dashed horizontal separator (Flutter has no native dashed border)
+// Dashed horizontal separator
 // ─────────────────────────────────────────────────────────────────
 class _DashedSeparator extends StatelessWidget {
   const _DashedSeparator();
@@ -291,18 +353,20 @@ class _SlotList extends StatelessWidget {
   final bool dayActuallyOn;
   final int runningSlotId;
   final String runningRemaining;
+  final void Function(int slotId) onToggleSlot;
 
   const _SlotList({
     required this.settings,
     required this.dayActuallyOn,
     required this.runningSlotId,
     required this.runningRemaining,
+    required this.onToggleSlot,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 90), // 90 = clears FAB
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 90),
       itemCount: settings.slots.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (_, i) {
@@ -312,6 +376,7 @@ class _SlotList extends StatelessWidget {
           dayActuallyOn: dayActuallyOn,
           runningRemaining:
               slot.id == runningSlotId ? runningRemaining : null,
+          onToggleEnabled: () => onToggleSlot(slot.id),
         );
       },
     );

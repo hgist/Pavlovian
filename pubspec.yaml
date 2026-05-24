@@ -40,6 +40,10 @@ dependencies:
   # Fonts are downloaded once and cached on the device thereafter.
   google_fonts: ^6.2.1
 
+  # Riverpod — reactive state management.
+  # Holds AppSettings; widgets that watch it rebuild on change.
+  flutter_riverpod: ^2.6.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

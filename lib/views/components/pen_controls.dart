@@ -1,29 +1,31 @@
 // Small "pen-stroke" UI controls — the checkbox and the global pill switch.
-// Both match the hand-drawn wireframe aesthetic (thick ink borders,
-// terracotta fill when active, hard offset shadows for depth).
 //
-// Visual only at this stage — interactivity (onChanged callbacks)
-// is wired in Step 6 when we add Riverpod state management.
+// Step 5: visual only.
+// Step 6: now accept an optional `onTap` callback. When null, the widget
+//         is non-interactive; when set, tapping the widget invokes it.
+//         Riverpod state lives in MainScreen, not here — these stay
+//         dumb presentation widgets.
 
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
 /// Square checkbox with a hand-drawn check mark drawn via CustomPainter.
-/// Pass `small: true` for the in-row variant used inside slot cards.
 class PenCheckbox extends StatelessWidget {
   final bool checked;
   final bool small;
+  final VoidCallback? onTap;
 
   const PenCheckbox({
     super.key,
     required this.checked,
     this.small = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final s = small ? 18.0 : 22.0;
-    return Container(
+    final box = Container(
       width: s,
       height: s,
       decoration: BoxDecoration(
@@ -31,7 +33,6 @@ class PenCheckbox extends StatelessWidget {
         border: Border.all(color: AppColors.ink, width: 2),
         borderRadius: BorderRadius.circular(5),
       ),
-      // Render the check-mark stroke when checked.
       child: checked
           ? Center(
               child: SizedBox(
@@ -42,13 +43,24 @@ class PenCheckbox extends StatelessWidget {
             )
           : null,
     );
+
+    // Wrap in a GestureDetector with a 4px hit-area padding so the
+    // tiny checkbox is easier to tap.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: box,
+      ),
+    );
   }
 }
 
 class _CheckPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.scale(size.width / 14); // SVG coord system is 14x14
+    canvas.scale(size.width / 14);
     final paint = Paint()
       ..color = AppColors.ink
       ..style = PaintingStyle.stroke
@@ -69,11 +81,13 @@ class _CheckPainter extends CustomPainter {
 /// Pill-shaped toggle switch — the global "ALL" master in the header.
 class GlobalSwitch extends StatelessWidget {
   final bool on;
-  const GlobalSwitch({super.key, required this.on});
+  final VoidCallback? onTap;
+
+  const GlobalSwitch({super.key, required this.on, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final pill = Container(
       width: 46,
       height: 24,
       decoration: BoxDecoration(
@@ -90,7 +104,9 @@ class GlobalSwitch extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
             top: 1,
             left: on ? 22 : 1,
             child: Container(
@@ -103,6 +119,15 @@ class GlobalSwitch extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: pill,
       ),
     );
   }

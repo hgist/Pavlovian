@@ -1,11 +1,7 @@
-// Smoke test: the app boots and the main screen shows expected elements.
-//
-// Widget tests render the widget tree in a headless test environment —
-// no emulator needed. Run with:  flutter test
-//
-// Note: GoogleFonts may try to fetch fonts over the network. In tests
-// it falls back to system fonts and we just check for the text strings.
+// Smoke test: the app boots wrapped in ProviderScope (Step 6 onward)
+// and the main screen shows expected elements.
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavlovian/main.dart';
 
@@ -13,7 +9,7 @@ void main() {
   testWidgets(
     'app boots and main screen shows title, ALL switch label, and all 3 slots',
     (tester) async {
-      await tester.pumpWidget(const PavlovianApp());
+      await tester.pumpWidget(const ProviderScope(child: PavlovianApp()));
       // Header
       expect(find.text('Timers'), findsOneWidget);
       expect(find.text('ALL ON'), findsOneWidget);

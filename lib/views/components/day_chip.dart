@@ -1,9 +1,12 @@
 // A single day chip in the horizontal day-picker row.
 //
 // Three visual variants based on the day:
-//   - active   : the selected "today" — solid ink fill, paper text, drop shadow
-//   - working  : a selectable weekday — outlined pill, terracotta indicator dot
+//   - active   : the selected day — solid ink fill, paper text, drop shadow
+//   - working  : another selectable weekday — outlined pill, terracotta dot
 //   - off      : Fri/Sat — no border, struck-through hairline mono text
+//
+// Step 6: working chips now accept `onTap` to switch the active day.
+//         Fri/Sat chips ignore onTap (non-interactive).
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,12 +16,18 @@ import '../../models/weekday.dart';
 class DayChip extends StatelessWidget {
   final Weekday day;
   final bool isActive;
+  final VoidCallback? onTap;
 
-  const DayChip({super.key, required this.day, required this.isActive});
+  const DayChip({
+    super.key,
+    required this.day,
+    required this.isActive,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Fri & Sat — non-working, struck through, no pill
+    // Fri & Sat — non-working, struck through, non-tappable.
     if (!day.isWorking) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -34,42 +43,45 @@ class DayChip extends StatelessWidget {
       );
     }
 
-    // Working day pill (Sun–Thu)
-    // Stack lets the terracotta dot escape the pill's top-right corner.
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.ink : Colors.transparent,
-            border: Border.all(color: AppColors.ink, width: 2),
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: AppColors.ink.withValues(alpha: 0.2),
-                      offset: const Offset(2, 2),
-                      blurRadius: 0,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            day.label,
-            style: TextStyle(
-              fontSize: 14,
-              color: isActive ? AppColors.paper : AppColors.ink,
+    // Working day pill (Sun–Thu) — tappable
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.ink : Colors.transparent,
+              border: Border.all(color: AppColors.ink, width: 2),
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: isActive
+                  ? [
+                      BoxShadow(
+                        color: AppColors.ink.withValues(alpha: 0.2),
+                        offset: const Offset(2, 2),
+                        blurRadius: 0,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Text(
+              day.label,
+              style: TextStyle(
+                fontSize: 14,
+                color: isActive ? AppColors.paper : AppColors.ink,
+              ),
             ),
           ),
-        ),
-        if (!isActive)
-          const Positioned(
-            top: 2,
-            right: 4,
-            child: _Dot(),
-          ),
-      ],
+          if (!isActive)
+            const Positioned(
+              top: 2,
+              right: 4,
+              child: _Dot(),
+            ),
+        ],
+      ),
     );
   }
 }
