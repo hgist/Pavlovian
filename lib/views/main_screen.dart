@@ -20,6 +20,8 @@ import '../models/weekday.dart';
 import '../viewmodels/selected_day_provider.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/day_chip.dart';
+import 'components/menu_icons.dart';
+import 'components/pavlovian_drawer.dart';
 import 'components/pen_controls.dart';
 import 'components/slot_card.dart';
 
@@ -96,6 +98,7 @@ class _LoadedScreen extends ConsumerWidget {
     final settingsNotifier = ref.read(settingsProvider.notifier);
 
     return Scaffold(
+      drawer: const PavlovianDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -164,10 +167,23 @@ class _Header extends StatelessWidget {
             : 'paused for ${today.label}';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 14, 14, 6),
+      padding: const EdgeInsets.fromLTRB(10, 14, 14, 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Hamburger (opens the drawer) ──────────────────────────
+          // Builder gives us a context that's a descendant of Scaffold
+          // so Scaffold.of(...) can find it.
+          Builder(
+            builder: (ctx) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Scaffold.of(ctx).openDrawer(),
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(4, 6, 8, 4),
+                child: HamburgerIcon(size: 22),
+              ),
+            ),
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

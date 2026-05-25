@@ -1,19 +1,22 @@
 // Splash screen — matches the A0-splash.html wireframe.
 //
-// Layout: a Column with three sections distributed vertically:
-//   1. Top spacer
-//   2. Centred branding (bell + name + underline + tagline + byline + day badge)
-//   3. Bottom (loading dots + version + "loading…" annotation)
+// Two widgets live in this file:
 //
-// This is a StatelessWidget — nothing on this screen changes after first paint.
-// In a later step we'll add a 1.5-second timer that navigates to the main screen.
+//   - SplashScreen : the pure-UI splash widget (StatelessWidget).
+//   - SplashGate   : a StatefulWidget that displays SplashScreen for
+//                    at least `minDuration`, in parallel waits for
+//                    settings to finish loading, then replaces itself
+//                    with MainScreen via Navigator.pushReplacement.
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
+import '../viewmodels/settings_provider.dart';
 import 'components/bell_icon.dart';
 import 'components/scribble.dart';
+import 'main_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -209,5 +212,62 @@ class _BottomLoading extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SplashGate — shows SplashScreen for at least `minDuration`, in
+// parallel waits for the AsyncNotifier to finish loading, then
+// navigates (replaces, so back button can't return here) to MainScreen.
+//
+// In tests, pass `Duration.zero` to skip the visible splash entirely.
+// ─────────────────────────────────────────────────────────────────────
+class SplashGate extends ConsumerStatefulWidget {
+  /// Minimum time the splash is displayed before transitioning.
+  /// Defaults to 2 seconds (the "branded moment" on cold start).
+  final Duration minDuration;
+
+  const SplashGate({
+    super.key,
+    this.minDuration = const Duration(seconds: 2),
+  });
+
+  @override
+  ConsumerState<SplashGate> createState() => _SplashGateState();
+}
+
+class _SplashGateState extends ConsumerState<SplashGate> {
+  @override
+  void initState() {
+    super.initState();
+    // Kick off the wait-and-navigate flow. We don't `await` here —
+    // initState must be synchronous — so we fire and forget.
+    _waitThenGoToMain();
+  }
+
+  Future<void> _waitThenGoToMain() async {
+    // Both timers race in parallel; we wait for both to complete.
+    //   1. Disk read of AppSettings (typically 5–20 ms)
+    //   2. Min splash display time (typically 2 s)
+    // So total time = max(load, splash) — splash is the floor.
+    final settingsFuture = ref.read(settingsProvider.future);
+    await Future.wait<dynamic>([
+      settingsFuture,
+      Future<void>.delayed(widget.minDuration),
+    ]);
+
+    // `mounted` guards against the widget being disposed mid-await
+    // (e.g., test tear-down, hot-restart). Without this we'd risk
+    // calling Navigator on a defunct State.
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const MainScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SplashScreen();
   }
 }

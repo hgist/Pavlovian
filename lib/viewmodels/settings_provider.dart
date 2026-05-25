@@ -24,6 +24,8 @@ import '../services/settings_repository.dart';
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
   /// Runs once on first read. Returning a Future puts us in the
   /// "loading" state until it completes; result becomes the data.
+  /// Disk read is fast (5–20 ms); the visible "branded" moment on
+  /// startup is now handled by SplashGate (lib/views/splash_screen.dart).
   @override
   Future<AppSettings> build() async {
     final repo = ref.read(settingsRepositoryProvider);
