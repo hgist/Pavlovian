@@ -83,4 +83,23 @@ class BreakSlot {
   String toString() =>
       'BreakSlot(#$id "$label" @ ${time.toDisplay()}, '
       '${durationMinutes}min, sound=$soundName, enabled=$enabled)';
+
+  // ── JSON serialization (Step 7) ───────────────────────────────────
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'label': label,
+        'time': time.toJson(),
+        'durationMinutes': durationMinutes,
+        'soundName': soundName,
+        'enabled': enabled,
+      };
+
+  factory BreakSlot.fromJson(Map<String, dynamic> json) => BreakSlot(
+        id: json['id'] as int,
+        label: json['label'] as String,
+        time: BreakTime.fromJson(json['time'] as Map<String, dynamic>),
+        durationMinutes: json['durationMinutes'] as int,
+        soundName: json['soundName'] as String,
+        enabled: json['enabled'] as bool,
+      );
 }

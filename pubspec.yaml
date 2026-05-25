@@ -44,6 +44,10 @@ dependencies:
   # Holds AppSettings; widgets that watch it rebuild on change.
   flutter_riverpod: ^2.6.1
 
+  # Local key/value storage — used to persist AppSettings as JSON
+  # so toggles survive app restarts and device reboots.
+  shared_preferences: ^2.3.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

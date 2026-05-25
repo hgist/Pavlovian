@@ -115,4 +115,41 @@ class AppSettings {
   /// given day & slot — i.e. this slot will actually fire that day.
   bool willFire(Weekday day, BreakSlot slot) =>
       globalEnabled && isDayEnabled(day) && slot.enabled;
+
+  // ── JSON serialization (Step 7) ───────────────────────────────────
+  // The `version` field lets future schema changes detect old data
+  // and migrate or discard it gracefully.
+  static const int storageVersion = 1;
+
+  Map<String, dynamic> toJson() => {
+        'version': storageVersion,
+        'globalEnabled': globalEnabled,
+        // Weekday isn't a string natively, so encode using enum's `.name`
+        'perDayEnabled': {
+          for (final entry in perDayEnabled.entries)
+            entry.key.name: entry.value,
+        },
+        'slots': slots.map((s) => s.toJson()).toList(),
+        'vibrate': vibrate,
+        'flashLed': flashLed,
+      };
+
+  factory AppSettings.fromJson(Map<String, dynamic> json) {
+    final rawDays = json['perDayEnabled'] as Map<String, dynamic>;
+    final dayMap = <Weekday, bool>{};
+    for (final entry in rawDays.entries) {
+      final day = Weekday.values.firstWhere((d) => d.name == entry.key);
+      dayMap[day] = entry.value as bool;
+    }
+    final slotsList = (json['slots'] as List)
+        .map((s) => BreakSlot.fromJson(s as Map<String, dynamic>))
+        .toList(growable: false);
+    return AppSettings(
+      globalEnabled: json['globalEnabled'] as bool,
+      perDayEnabled: dayMap,
+      slots: slotsList,
+      vibrate: json['vibrate'] as bool,
+      flashLed: json['flashLed'] as bool,
+    );
+  }
 }

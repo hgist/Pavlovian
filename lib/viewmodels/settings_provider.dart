@@ -1,53 +1,84 @@
 // The single source of truth for all user-configurable app state.
 //
-// This is the "ViewModel" layer in our MVVM architecture:
-//   - It holds an AppSettings (from lib/models/) — purely data.
-//   - It exposes methods to mutate that state immutably (always via
-//     copyWith — never modify fields in place).
-//   - Widgets subscribe with `ref.watch(settingsProvider)` and rebuild
-//     when state changes.
+// Step 7: now an AsyncNotifier — settings live on disk and are loaded
+// asynchronously on first access via SettingsRepository.
+//
+// State flow:
+//   App start → build() runs → reads from SharedPreferences → state
+//   becomes AsyncData(AppSettings) → UI rebuilds.
+//
+//   User toggles something → notifier mutates state in memory AND
+//   awaits repository.save() → state on disk now matches UI.
 //
 // For C/Java programmers:
-//   Notifier ≈ a Java class with private state + public setter methods.
-//   NotifierProvider ≈ a singleton-like accessor for that object.
-//   `state` is a field of type AppSettings; assigning to it triggers
-//   reactive rebuilds of any UI watching this provider.
+//   AsyncNotifier ≈ a class whose state is a Future-like wrapper
+//   (AsyncValue<T> = loading | data(T) | error). Widgets read
+//   `state.value` (the AppSettings, or null while loading).
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/app_settings.dart';
 import '../models/weekday.dart';
+import '../services/settings_repository.dart';
 
-class SettingsNotifier extends Notifier<AppSettings> {
-  /// Called once when this provider is first read. Returns the
-  /// initial state. In Step 7 we'll load from shared_preferences here.
+class SettingsNotifier extends AsyncNotifier<AppSettings> {
+  /// Runs once on first read. Returning a Future puts us in the
+  /// "loading" state until it completes; result becomes the data.
   @override
-  AppSettings build() => AppSettings.defaults();
-
-  /// Flip the global ALL master switch (Layer 1 of the enable hierarchy).
-  void toggleGlobal() {
-    state = state.copyWith(globalEnabled: !state.globalEnabled);
+  Future<AppSettings> build() async {
+    final repo = ref.read(settingsRepositoryProvider);
+    return await repo.load();
   }
 
-  /// Flip a working day's master switch (Layer 2). No-op for Fri/Sat
-  /// — those days never fire regardless.
-  void toggleDay(Weekday day) {
+  /// Helper: return the current AppSettings or null if not yet loaded.
+  /// In practice the UI only calls toggle methods after data is shown,
+  /// so this never returns null in normal flow.
+  AppSettings? get _current => state.value;
+
+  /// Helper: update state in memory + persist to disk.
+  Future<void> _update(AppSettings next) async {
+    state = AsyncData(next);
+    await ref.read(settingsRepositoryProvider).save(next);
+  }
+
+  /// Flip the global ALL master switch (Layer 1).
+  Future<void> toggleGlobal() async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(globalEnabled: !current.globalEnabled));
+  }
+
+  /// Flip a working day's master switch (Layer 2). No-op for Fri/Sat.
+  Future<void> toggleDay(Weekday day) async {
     if (!day.isWorking) return;
-    final current = state.perDayEnabled[day] ?? false;
-    state = state.copyWith(
-      perDayEnabled: {...state.perDayEnabled, day: !current},
-    );
+    final current = _current;
+    if (current == null) return;
+    final isOn = current.perDayEnabled[day] ?? false;
+    await _update(current.copyWith(
+      perDayEnabled: {...current.perDayEnabled, day: !isOn},
+    ));
   }
 
   /// Flip a single slot's per-timer enable (Layer 3).
-  /// Identified by slot.id (1, 2, or 3).
-  void toggleSlot(int slotId) {
-    final slot = state.slots.firstWhere((s) => s.id == slotId);
-    state = state.withUpdatedSlot(slot.copyWith(enabled: !slot.enabled));
+  Future<void> toggleSlot(int slotId) async {
+    final current = _current;
+    if (current == null) return;
+    final slot = current.slots.firstWhere((s) => s.id == slotId);
+    await _update(
+      current.withUpdatedSlot(slot.copyWith(enabled: !slot.enabled)),
+    );
+  }
+
+  /// Reset all settings to factory defaults AND clear persisted data.
+  /// Used by "Reset All to Defaults" in Step 9+ and by tests.
+  Future<void> resetToDefaults() async {
+    state = AsyncData(AppSettings.defaults());
+    await ref.read(settingsRepositoryProvider).reset();
   }
 }
 
-/// The provider widgets read from / listen to.
-/// Idiomatic Riverpod naming: lowercase + "Provider" suffix.
-final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
-  SettingsNotifier.new,
-);
+/// AsyncNotifierProvider — the async-aware counterpart of
+/// NotifierProvider. Widgets receive an `AsyncValue<AppSettings>`
+/// (loading / data / error) which they dispatch on with `.when(...)`.
+final settingsProvider =
+    AsyncNotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);

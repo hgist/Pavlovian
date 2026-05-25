@@ -45,4 +45,10 @@ class BreakTime implements Comparable<BreakTime> {
 
   @override
   String toString() => 'BreakTime(${toDisplay()})';
+
+  // ── JSON serialization (Step 7) ───────────────────────────────────
+  Map<String, dynamic> toJson() => {'hour': hour, 'minute': minute};
+
+  factory BreakTime.fromJson(Map<String, dynamic> json) =>
+      BreakTime(json['hour'] as int, json['minute'] as int);
 }

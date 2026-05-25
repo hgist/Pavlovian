@@ -23,13 +23,65 @@ import 'components/day_chip.dart';
 import 'components/pen_controls.dart';
 import 'components/slot_card.dart';
 
+/// Top-level screen — dispatches on the AsyncValue from the
+/// (now async) settings provider. Renders one of three sub-screens
+/// depending on whether settings are loading, loaded, or errored.
 class MainScreen extends ConsumerWidget {
   const MainScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch reactive state — this widget rebuilds whenever either changes.
-    final settings = ref.watch(settingsProvider);
+    final settingsAsync = ref.watch(settingsProvider);
+
+    return settingsAsync.when(
+      data: (settings) => _LoadedScreen(settings: settings),
+      loading: () => const _LoadingScreen(),
+      error: (e, _) => _ErrorScreen(error: e),
+    );
+  }
+}
+
+/// Brief loading screen — shown only for the milliseconds it takes
+/// SharedPreferences to read from disk. On most launches the user
+/// will not notice it.
+class _LoadingScreen extends StatelessWidget {
+  const _LoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Shown if settings load fails (very unlikely — SharedPreferences
+/// returns defaults on parse errors). Visible diagnostic, not pretty.
+class _ErrorScreen extends StatelessWidget {
+  final Object error;
+  const _ErrorScreen({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Couldn\'t load settings:\n$error'),
+        ),
+      ),
+    );
+  }
+}
+
+/// The real main screen — assumes settings are loaded.
+/// This is where Steps 4–6 logic now lives.
+class _LoadedScreen extends ConsumerWidget {
+  final AppSettings settings;
+  const _LoadedScreen({required this.settings});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final today = ref.watch(selectedDayProvider);
 
     // Demo running countdown — still hardcoded; wired in Step 13.
