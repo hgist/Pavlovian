@@ -1,7 +1,7 @@
 // Pavlovian — main entry point.
 //
 // Cold-start flow:
-//   runApp(ProviderScope)
+//   runApp(ProviderScope, overrides=[appVersion])
 //     → PavlovianApp (MaterialApp with our theme)
 //       → SplashGate (shows SplashScreen for ≥ 2 s, awaits settings)
 //         → MainScreen (Navigator.pushReplacement)
@@ -11,14 +11,26 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'services/app_version.dart';
 import 'theme/app_theme.dart';
 import 'views/splash_screen.dart';
 
-void main() {
+Future<void> main() async {
   // Required before any async plugin use (SharedPreferences,
-  // notifications, etc.) when running before runApp().
+  // PackageInfo, notifications, etc.) when running before runApp().
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: PavlovianApp()));
+
+  // Load the actual app version from pubspec / Android package
+  // metadata once, then inject it through the provider so the
+  // whole widget tree gets the real "1.0.X" string.
+  final appVersion = await loadAppVersion();
+
+  runApp(ProviderScope(
+    overrides: [
+      appVersionProvider.overrideWithValue(appVersion),
+    ],
+    child: const PavlovianApp(),
+  ));
 }
 
 class PavlovianApp extends StatelessWidget {

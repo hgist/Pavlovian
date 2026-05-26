@@ -48,6 +48,11 @@ dependencies:
   # so toggles survive app restarts and device reboots.
   shared_preferences: ^2.3.4
 
+  # Reads app version + build number from pubspec.yaml at runtime
+  # so the UI (splash, drawer, settings header) stays in sync
+  # with whatever the bump_version script wrote into pubspec.yaml.
+  package_info_plus: ^8.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -58,6 +63,27 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+  # Generates all Android mipmap PNGs (mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi)
+  # + adaptive-icon XML from a single source image. Run with:
+  #   dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.13.1
+
+# ----------------------------------------------------------------------
+# App icon configuration — consumed by `flutter_launcher_icons` package.
+# Re-run `dart run flutter_launcher_icons` whenever the source images
+# in assets/icon/ are regenerated.
+# ----------------------------------------------------------------------
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: false
+  remove_alpha_ios: false
+  image_path: "assets/icon/pavlovian_icon.png"
+  # Adaptive icon (Android 8+) — bell drawn slightly smaller on
+  # transparent foreground; OS masks it into circle/squircle/etc.
+  adaptive_icon_background: "#FBF7EE"   # paper colour
+  adaptive_icon_foreground: "assets/icon/pavlovian_icon_fg.png"
+  min_sdk_android: 24
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

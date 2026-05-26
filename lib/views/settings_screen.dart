@@ -32,6 +32,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/app_settings.dart';
 import '../models/break_slot.dart';
+import '../services/app_version.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/menu_icons.dart';
@@ -77,11 +78,12 @@ class SettingsScreen extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────
 // Header — back arrow + Settings title + version + gear icon
 // ─────────────────────────────────────────────────────────────────
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   const _Header();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appVersion = ref.watch(appVersionProvider);
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 18, 10),
       decoration: const BoxDecoration(
@@ -124,7 +126,7 @@ class _Header extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Pavlovian v1.0.0',
+                  'Pavlovian v${appVersion.version}',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 11,
                     color: AppColors.inkMuted,

@@ -3,6 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavlovian/main.dart';
+import 'package:pavlovian/services/app_version.dart';
 import 'package:pavlovian/views/components/menu_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,11 +12,17 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  // Boots the app with the splash skipped, ready for assertions.
+  // Boots the app with the splash skipped and a known version,
+  // ready for assertions.
   Future<void> bootApp(WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: PavlovianApp(splashDuration: Duration.zero),
+      ProviderScope(
+        overrides: [
+          appVersionProvider.overrideWithValue(
+            const AppVersion(version: '1.0.0', buildNumber: '1'),
+          ),
+        ],
+        child: const PavlovianApp(splashDuration: Duration.zero),
       ),
     );
     await tester.pumpAndSettle();

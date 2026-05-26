@@ -4,18 +4,21 @@
 // added later without restructuring.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/app_version.dart';
 import '../../theme/app_theme.dart';
 import '../settings_screen.dart';
 import 'bell_icon.dart';
 import 'menu_icons.dart';
 
-class PavlovianDrawer extends StatelessWidget {
+class PavlovianDrawer extends ConsumerWidget {
   const PavlovianDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appVersion = ref.watch(appVersionProvider);
     return Drawer(
       backgroundColor: AppColors.paperLight,
       width: 280,
@@ -45,7 +48,7 @@ class PavlovianDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: Text(
-                'v 1.0.0',
+                appVersion.display,
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 10,
                   color: AppColors.inkHairline,

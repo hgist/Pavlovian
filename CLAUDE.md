@@ -110,6 +110,21 @@ The design is fully specified in 6 HTML wireframes at the project root:
 
 Visual style: pen-stroke borders, dashed separators, slight offset drop-shadows for a hand-drawn feel.
 
+## Versioning convention
+`pubspec.yaml` uses the format `version: 1.0.X+X` where the SemVer
+patch (the last part of `X.Y.Z`) and the Android versionCode (the
+number after `+`) are **always equal**. Bump them together via the
+helper script:
+```
+dart run tools/bump_version.dart            # patch += 1, build = patch
+dart run tools/bump_version.dart 7          # patch = 7,  build = 7
+dart run tools/bump_version.dart 1.1.0      # full semver, build = patch
+```
+The version is read at runtime by `lib/services/app_version.dart`
+(`package_info_plus`) and surfaced via `appVersionProvider`, so the
+splash, drawer footer, and settings header always reflect what's in
+pubspec.yaml — no hardcoded strings.
+
 ## Build & Run
 ```
 flutter doctor                      # verify toolchain

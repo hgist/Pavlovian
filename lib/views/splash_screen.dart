@@ -12,6 +12,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/app_version.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/bell_icon.dart';
@@ -180,11 +181,12 @@ class _BellInCircle extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────
 // Bottom block: loading dots + version + "loading…" annotation
 // ─────────────────────────────────────────────────────────────────────
-class _BottomLoading extends StatelessWidget {
+class _BottomLoading extends ConsumerWidget {
   const _BottomLoading();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appVersion = ref.watch(appVersionProvider);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -192,7 +194,7 @@ class _BottomLoading extends StatelessWidget {
         const LoadingDots(),
         const SizedBox(height: 14),
         Text(
-          'v 1.0.0',
+          appVersion.display,
           style: GoogleFonts.jetBrainsMono(
             fontSize: 9,
             color: AppColors.inkHairline,
