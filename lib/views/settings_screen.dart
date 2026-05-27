@@ -39,6 +39,7 @@ import '../viewmodels/settings_provider.dart';
 import 'components/menu_icons.dart';
 import 'dialogs/edit_duration_sheet.dart';
 import 'dialogs/edit_label_dialog.dart';
+import 'dialogs/edit_sound_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -316,7 +317,7 @@ class _SlotCard extends ConsumerWidget {
                   mono: false,
                   accent: true,
                   isLast: true,
-                  onTap: () => _editSound(context),
+                  onTap: () => _editSound(context, notifier),
                 ),
               ],
             ),
@@ -359,18 +360,10 @@ class _SlotCard extends ConsumerWidget {
     await notifier.setSlotLabel(slot.id, newLabel);
   }
 
-  Future<void> _editSound(BuildContext context) async {
-    // Sound picker comes in Step 10 — placeholder for now.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Sound picker — coming in Step 10',
-          style: GoogleFonts.patrickHand(fontSize: 14),
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: AppColors.ink,
-      ),
-    );
+  Future<void> _editSound(BuildContext context, dynamic notifier) async {
+    final newSound = await EditSoundSheet.show(context, slot.soundName);
+    if (newSound == null) return;
+    await notifier.setSlotSound(slot.id, newSound);
   }
 }
 
