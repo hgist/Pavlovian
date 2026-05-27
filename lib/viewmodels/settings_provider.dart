@@ -18,6 +18,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/app_settings.dart';
+import '../models/break_time.dart';
 import '../models/weekday.dart';
 import '../services/settings_repository.dart';
 
@@ -69,6 +70,57 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(
       current.withUpdatedSlot(slot.copyWith(enabled: !slot.enabled)),
     );
+  }
+
+  // ── Per-slot field updaters (Step 9) ───────────────────────────────
+  // Each method finds the slot by id, applies copyWith for the one
+  // field, and persists via _update(). Rounding/clamping is done HERE
+  // so the UI picker doesn't have to enforce the spec's 5-min rule.
+
+  /// Set a slot's time of day. The minute is snapped to the nearest
+  /// multiple of 5 — enforcing the spec's 5-min granularity even if
+  /// the UI picker allowed any value.
+  Future<void> setSlotTime(int slotId, BreakTime newTime) async {
+    final current = _current;
+    if (current == null) return;
+    final slot = current.slots.firstWhere((s) => s.id == slotId);
+    await _update(current.withUpdatedSlot(
+      slot.copyWith(time: newTime.roundedToNearest5()),
+    ));
+  }
+
+  /// Set a slot's duration. Clamped to [5, 240] minutes and rounded
+  /// to the nearest multiple of 5.
+  Future<void> setSlotDuration(int slotId, int newMinutes) async {
+    final current = _current;
+    if (current == null) return;
+    final clamped = newMinutes.clamp(5, 240);
+    final rounded = ((clamped + 2) ~/ 5) * 5;
+    final slot = current.slots.firstWhere((s) => s.id == slotId);
+    await _update(current.withUpdatedSlot(
+      slot.copyWith(durationMinutes: rounded),
+    ));
+  }
+
+  /// Set a slot's human-readable label. Empty or all-whitespace
+  /// strings are ignored (no-op) to avoid blanking the UI.
+  Future<void> setSlotLabel(int slotId, String newLabel) async {
+    final trimmed = newLabel.trim();
+    if (trimmed.isEmpty) return;
+    final current = _current;
+    if (current == null) return;
+    final slot = current.slots.firstWhere((s) => s.id == slotId);
+    await _update(current.withUpdatedSlot(slot.copyWith(label: trimmed)));
+  }
+
+  /// Set a slot's alert sound (Chime, Bell, …). Names are not
+  /// validated here — caller (the sound picker, Step 10) only
+  /// passes the bundled-asset names.
+  Future<void> setSlotSound(int slotId, String newSoundName) async {
+    final current = _current;
+    if (current == null) return;
+    final slot = current.slots.firstWhere((s) => s.id == slotId);
+    await _update(current.withUpdatedSlot(slot.copyWith(soundName: newSoundName)));
   }
 
   /// Reset all settings to factory defaults AND clear persisted data.

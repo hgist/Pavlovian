@@ -32,10 +32,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/app_settings.dart';
 import '../models/break_slot.dart';
+import '../models/break_time.dart';
 import '../services/app_version.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/menu_icons.dart';
+import 'dialogs/edit_duration_sheet.dart';
+import 'dialogs/edit_label_dialog.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -202,14 +205,19 @@ class _DashedLinePainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ① Break-slot configuration card
+// ① Break-slot configuration card — now interactive (Step 9).
+//
+// Tapping any row opens the appropriate editor; the new value flows
+// into SettingsNotifier and persists to disk via the Step 7 repo.
 // ─────────────────────────────────────────────────────────────────
-class _SlotCard extends StatelessWidget {
+class _SlotCard extends ConsumerWidget {
   final BreakSlot slot;
   const _SlotCard({required this.slot});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(settingsProvider.notifier);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
       decoration: BoxDecoration(
@@ -226,62 +234,66 @@ class _SlotCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Slot header row (badge + label + edit label affordance)
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-            decoration: BoxDecoration(
-              color: AppColors.terracotta.withValues(alpha: 0.08),
-              border: const Border(
-                bottom: BorderSide(color: AppColors.inkHairline, width: 1.5),
+          // Slot header row — tap "edit label" to rename
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _editLabel(context, notifier),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+              decoration: BoxDecoration(
+                color: AppColors.terracotta.withValues(alpha: 0.08),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.inkHairline, width: 1.5),
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Numbered badge
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: AppColors.terracotta,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.ink, width: 1.5),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${slot.id}',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 11,
-                        color: AppColors.ink,
-                        fontWeight: FontWeight.w500,
+              child: Row(
+                children: [
+                  // Numbered badge
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: AppColors.terracotta,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.ink, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${slot.id}',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          color: AppColors.ink,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    slot.label,
-                    style: GoogleFonts.architectsDaughter(
-                      fontSize: 15,
-                      color: AppColors.ink,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      slot.label,
+                      style: GoogleFonts.architectsDaughter(
+                        fontSize: 15,
+                        color: AppColors.ink,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  'edit label ›',
-                  style: GoogleFonts.caveat(
-                    fontSize: 14,
-                    color: AppColors.inkMuted,
+                  Text(
+                    'edit label ›',
+                    style: GoogleFonts.caveat(
+                      fontSize: 14,
+                      color: AppColors.inkMuted,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          // Slot fields — 3 rows
+          // Slot fields — 3 rows, each tappable
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
             child: Column(
@@ -290,11 +302,13 @@ class _SlotCard extends StatelessWidget {
                   label: 'Break time',
                   value: slot.time.toDisplay(),
                   mono: true,
+                  onTap: () => _editTime(context, notifier),
                 ),
                 _SettingRow(
                   label: 'Duration',
                   value: '${slot.durationMinutes} min',
                   mono: true,
+                  onTap: () => _editDuration(context, notifier),
                 ),
                 _SettingRow(
                   label: 'Alert sound',
@@ -302,11 +316,59 @@ class _SlotCard extends StatelessWidget {
                   mono: false,
                   accent: true,
                   isLast: true,
+                  onTap: () => _editSound(context),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Editor flows ───────────────────────────────────────────────
+
+  Future<void> _editTime(BuildContext context, dynamic notifier) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: slot.time.hour, minute: slot.time.minute),
+      initialEntryMode: TimePickerEntryMode.dial,
+      builder: (ctx, child) => MediaQuery(
+        data: MediaQuery.of(ctx).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+    // The notifier snaps to the nearest 5-min — UI doesn't have to.
+    await notifier.setSlotTime(
+      slot.id,
+      BreakTime(picked.hour, picked.minute),
+    );
+  }
+
+  Future<void> _editDuration(BuildContext context, dynamic notifier) async {
+    final newMin =
+        await EditDurationSheet.show(context, slot.durationMinutes);
+    if (newMin == null) return;
+    await notifier.setSlotDuration(slot.id, newMin);
+  }
+
+  Future<void> _editLabel(BuildContext context, dynamic notifier) async {
+    final newLabel = await showEditLabelDialog(context, slot.label);
+    if (newLabel == null) return;
+    await notifier.setSlotLabel(slot.id, newLabel);
+  }
+
+  Future<void> _editSound(BuildContext context) async {
+    // Sound picker comes in Step 10 — placeholder for now.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Sound picker — coming in Step 10',
+          style: GoogleFonts.patrickHand(fontSize: 14),
+        ),
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppColors.ink,
       ),
     );
   }
@@ -319,6 +381,7 @@ class _SettingRow extends StatelessWidget {
   final bool mono;
   final bool accent;
   final bool isLast;
+  final VoidCallback? onTap;
 
   const _SettingRow({
     required this.label,
@@ -326,11 +389,12 @@ class _SettingRow extends StatelessWidget {
     this.mono = false,
     this.accent = false,
     this.isLast = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final row = Container(
       padding: const EdgeInsets.symmetric(vertical: 7),
       decoration: isLast
           ? null
@@ -376,6 +440,14 @@ class _SettingRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    // Wrap in a GestureDetector when the row has a tap handler.
+    if (onTap == null) return row;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: row,
     );
   }
 }

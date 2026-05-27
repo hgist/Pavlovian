@@ -32,6 +32,21 @@ class BreakTime implements Comparable<BreakTime> {
   /// Total minutes since midnight — handy for sorting & duration math.
   int get totalMinutes => hour * 60 + minute;
 
+  /// Returns a new BreakTime with the minute rounded to the nearest
+  /// multiple of 5. Wraps over midnight if the rounding crosses 23:58.
+  ///
+  ///   02:23 -> 02:25   (round up)
+  ///   02:27 -> 02:25   (round down)
+  ///   02:28 -> 02:30
+  ///   23:58 -> 00:00   (wraps)
+  BreakTime roundedToNearest5() {
+    final rounded = ((minute + 2) ~/ 5) * 5;
+    if (rounded == 60) {
+      return BreakTime((hour + 1) % 24, 0);
+    }
+    return BreakTime(hour, rounded);
+  }
+
   @override
   int compareTo(BreakTime other) => totalMinutes - other.totalMinutes;
 

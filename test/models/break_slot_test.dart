@@ -41,6 +41,26 @@ void main() {
       expect(const BreakTime(10, 0) == const BreakTime(10, 0), true);
       expect(const BreakTime(10, 0) == const BreakTime(10, 1), false);
     });
+
+    test('roundedToNearest5 snaps to 5-min steps', () {
+      expect(const BreakTime(10, 0).roundedToNearest5(),
+          const BreakTime(10, 0));
+      expect(const BreakTime(10, 2).roundedToNearest5(),
+          const BreakTime(10, 0));   // down
+      expect(const BreakTime(10, 3).roundedToNearest5(),
+          const BreakTime(10, 5));   // up
+      expect(const BreakTime(10, 27).roundedToNearest5(),
+          const BreakTime(10, 25));
+      expect(const BreakTime(10, 28).roundedToNearest5(),
+          const BreakTime(10, 30));
+    });
+
+    test('roundedToNearest5 wraps past 60', () {
+      expect(const BreakTime(10, 58).roundedToNearest5(),
+          const BreakTime(11, 0));
+      expect(const BreakTime(23, 58).roundedToNearest5(),
+          const BreakTime(0, 0));    // midnight wrap
+    });
   });
 
   // ── Weekday ──────────────────────────────────────────────────────
