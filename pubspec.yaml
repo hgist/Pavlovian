@@ -57,6 +57,11 @@ dependencies:
   # later (Step 11+) for notification-channel sounds.
   audioplayers: ^6.1.0
 
+  # Cross-platform local notifications — used for both the manual
+  # "test" button (Step 11) and scheduled daily alarms (Step 12).
+  # Notification sounds reference res/raw/*.wav by channel id.
+  flutter_local_notifications: ^18.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

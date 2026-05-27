@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/app_version.dart';
+import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'views/splash_screen.dart';
 
@@ -24,6 +25,11 @@ Future<void> main() async {
   // metadata once, then inject it through the provider so the
   // whole widget tree gets the real "1.0.X" string.
   final appVersion = await loadAppVersion();
+
+  // Initialize the notification plugin so channels are ready
+  // before the first "▶ test" tap. Permission is requested
+  // lazily — only when the user actually fires a notification.
+  await NotificationService().initialize();
 
   runApp(ProviderScope(
     overrides: [

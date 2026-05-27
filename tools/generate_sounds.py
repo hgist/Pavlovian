@@ -104,8 +104,14 @@ def gen_soft() -> list[int]:
 
 
 def main() -> None:
-    out_dir = os.path.join("assets", "sounds")
-    os.makedirs(out_dir, exist_ok=True)
+    # Flutter assets dir — used by audioplayers for in-app preview.
+    assets_dir = os.path.join("assets", "sounds")
+    os.makedirs(assets_dir, exist_ok=True)
+
+    # Android raw resources dir — used by notification channels.
+    # Naming rules: lowercase, [a-z0-9_], must start with a letter.
+    raw_dir = os.path.join("android", "app", "src", "main", "res", "raw")
+    os.makedirs(raw_dir, exist_ok=True)
 
     print("Generating Pavlovian alert sounds...")
     sounds = [
@@ -115,10 +121,18 @@ def main() -> None:
         ("soft.wav",  gen_soft),
     ]
     for filename, generator in sounds:
-        path = os.path.join(out_dir, filename)
-        write_wav(path, generator())
-        size_kb = os.path.getsize(path) / 1024
-        print(f"  [ok] {path}  ({size_kb:.1f} KB)")
+        samples = generator()
+
+        # Write to assets/sounds (Flutter)
+        asset_path = os.path.join(assets_dir, filename)
+        write_wav(asset_path, samples)
+        size_kb = os.path.getsize(asset_path) / 1024
+        print(f"  [ok] {asset_path}  ({size_kb:.1f} KB)")
+
+        # Mirror to android/.../res/raw (notification channels)
+        raw_path = os.path.join(raw_dir, filename)
+        write_wav(raw_path, samples)
+        print(f"  [ok] {raw_path}")
 
     print("Done.")
     print("Next:")

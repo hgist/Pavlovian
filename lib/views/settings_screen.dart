@@ -34,6 +34,7 @@ import '../models/app_settings.dart';
 import '../models/break_slot.dart';
 import '../models/break_time.dart';
 import '../services/app_version.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/menu_icons.dart';
@@ -578,9 +579,29 @@ class _NotificationsCard extends StatelessWidget {
   }
 }
 
-class _TestNotificationRow extends StatelessWidget {
+class _TestNotificationRow extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Use slot 1 (Morning Break) as the test source. Whatever sound
+    // the user picked for slot 1 is the sound we fire here.
+    final slot = ref.watch(settingsProvider).value!.slots.first;
+
+    Future<void> fireTest() async {
+      final svc = ref.read(notificationServiceProvider);
+      await svc.fireTest(slot);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Test notification fired (${slot.soundName})',
+            style: GoogleFonts.patrickHand(fontSize: 14),
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: AppColors.ink,
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: const BoxDecoration(
@@ -602,7 +623,7 @@ class _TestNotificationRow extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'fires a sample alert now',
+                  'fires a sample alert with slot 1\'s sound',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     color: AppColors.inkMuted,
@@ -611,25 +632,29 @@ class _TestNotificationRow extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.ink, width: 1.5),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.ink.withValues(alpha: 0.2),
-                  offset: const Offset(1, 1),
-                  blurRadius: 0,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: fireTest,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.ink, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.ink.withValues(alpha: 0.2),
+                    offset: const Offset(1, 1),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Text(
+                '▶ test',
+                style: GoogleFonts.caveat(
+                  fontSize: 14,
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
-            child: Text(
-              '▶ test',
-              style: GoogleFonts.caveat(
-                fontSize: 14,
-                color: AppColors.ink,
-                fontWeight: FontWeight.w600,
               ),
             ),
           ),

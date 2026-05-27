@@ -3,7 +3,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavlovian/main.dart';
+import 'package:pavlovian/models/weekday.dart';
 import 'package:pavlovian/services/app_version.dart';
+import 'package:pavlovian/viewmodels/selected_day_provider.dart';
 import 'package:pavlovian/views/components/menu_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,8 +14,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  // Boots the app with the splash skipped and a known version,
-  // ready for assertions.
+  // Boots the app with: splash skipped, known version, selected day
+  // pinned to Monday so assertions don't depend on what day the tests
+  // happen to run on.
   Future<void> bootApp(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -21,6 +24,7 @@ void main() {
           appVersionProvider.overrideWithValue(
             const AppVersion(version: '1.0.0', buildNumber: '1'),
           ),
+          selectedDayProvider.overrideWith((ref) => Weekday.mon),
         ],
         child: const PavlovianApp(splashDuration: Duration.zero),
       ),

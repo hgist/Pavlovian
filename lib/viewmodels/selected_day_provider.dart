@@ -5,13 +5,22 @@
 // Tapping a day chip updates this; the day master card reads it to
 // know which day's enabled flag to display.
 //
-// In Step 12 the initial value will come from `DateTime.now().weekday`.
-// For now we default to Monday so the screen matches the wireframe.
+// Initialised to today's actual weekday from `DateTime.now()`.
+// On Fri/Sat the screen self-explains: header subtitle reads
+// "paused for Fri/Sat", the day-master card and slot list are
+// dimmed — exactly how a non-working day should look.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/weekday.dart';
 
-/// StateProvider is the simplest Riverpod provider — holds a single
-/// value, exposed for both reading and writing. Perfect for trivial
-/// UI state like this.
-final selectedDayProvider = StateProvider<Weekday>((ref) => Weekday.mon);
+/// Computes the day the app should land on when it first opens.
+/// Exposed (not private) so tests can override / verify it.
+Weekday initialSelectedDay({DateTime? now}) {
+  return Weekday.fromDateTime(now ?? DateTime.now());
+}
+
+/// StateProvider — holds the currently-viewed weekday.
+/// Initial value is today's weekday.
+final selectedDayProvider = StateProvider<Weekday>(
+  (ref) => initialSelectedDay(),
+);
