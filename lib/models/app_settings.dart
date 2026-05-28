@@ -18,7 +18,7 @@ class AppSettings {
   final bool globalEnabled;
 
   /// Layer 2 — per-day master switches. Keyed by every Weekday so the
-  /// map is complete, but only Sun–Thu can ever be true (Fri/Sat are
+  /// map is complete, but only Sun–Fri can ever be true (Sat is
   /// permanently off — enforced by isDayEnabled() below).
   final Map<Weekday, bool> perDayEnabled;
 
@@ -48,7 +48,8 @@ class AppSettings {
         Weekday.tue: true,
         Weekday.wed: true,
         Weekday.thu: true,
-        // Fri & Sat intentionally omitted — they're always off.
+        Weekday.fri: true,
+        // Sat intentionally omitted — it's always off.
       },
       slots: const [
         BreakSlot(
@@ -107,9 +108,12 @@ class AppSettings {
   /// Number of slots whose per-timer checkbox is currently on.
   int get enabledSlotCount => slots.where((s) => s.enabled).length;
 
-  /// Layer 2 + the Fri/Sat hard exclusion rolled into one check.
+  /// Layer 2 + the Saturday hard-exclusion rolled into one check.
+  /// A working day absent from the map defaults to ON — so existing
+  /// installs (saved before Friday became a working day) get Friday
+  /// enabled automatically without a settings reset.
   bool isDayEnabled(Weekday day) =>
-      day.isWorking && (perDayEnabled[day] ?? false);
+      day.isWorking && (perDayEnabled[day] ?? true);
 
   /// True when ALL three layers of the enable hierarchy are ON for the
   /// given day & slot — i.e. this slot will actually fire that day.

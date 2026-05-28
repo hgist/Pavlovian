@@ -65,16 +65,16 @@ void main() {
 
   // ── Weekday ──────────────────────────────────────────────────────
   group('Weekday', () {
-    test('Sun–Thu are working days', () {
+    test('Sun–Fri are working days', () {
       expect(Weekday.sun.isWorking, true);
       expect(Weekday.mon.isWorking, true);
       expect(Weekday.tue.isWorking, true);
       expect(Weekday.wed.isWorking, true);
       expect(Weekday.thu.isWorking, true);
+      expect(Weekday.fri.isWorking, true);
     });
 
-    test('Fri & Sat are NOT working days', () {
-      expect(Weekday.fri.isWorking, false);
+    test('Saturday is NOT a working day', () {
       expect(Weekday.sat.isWorking, false);
     });
 
@@ -121,16 +121,16 @@ void main() {
       expect(defaults.slots.every((s) => s.enabled), true);
     });
 
-    test('Sun–Thu master switches all on', () {
+    test('Sun–Fri master switches all on', () {
       expect(defaults.isDayEnabled(Weekday.sun), true);
       expect(defaults.isDayEnabled(Weekday.mon), true);
       expect(defaults.isDayEnabled(Weekday.tue), true);
       expect(defaults.isDayEnabled(Weekday.wed), true);
       expect(defaults.isDayEnabled(Weekday.thu), true);
+      expect(defaults.isDayEnabled(Weekday.fri), true);
     });
 
-    test('Fri & Sat are always off, regardless of map contents', () {
-      expect(defaults.isDayEnabled(Weekday.fri), false);
+    test('Saturday is always off, regardless of map contents', () {
       expect(defaults.isDayEnabled(Weekday.sat), false);
     });
 
@@ -172,8 +172,8 @@ void main() {
       }
     });
 
-    test('Fri/Sat never fire even if everything else is on', () {
-      expect(settings.willFire(Weekday.fri, slot), false);
+    test('Friday now fires (working day); Saturday never fires', () {
+      expect(settings.willFire(Weekday.fri, slot), true);
       expect(settings.willFire(Weekday.sat, slot), false);
     });
   });

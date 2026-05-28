@@ -20,11 +20,16 @@ class _StubNotificationService implements NotificationService {
   @override
   Future<bool> requestPermission() async => true;
   @override
-  String channelIdFor(BreakSlot slot) => 'stub';
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) => 'stub';
   @override
-  Future<void> fireTest(BreakSlot slot) async {}
+  Future<void> fireTest(BreakSlot slot, bool vibrate, bool flashLed) async {}
   @override
   Future<void> scheduleAll(AppSettings settings) async {}
+  @override
+  Future<void> scheduleBreakEnd(BreakSlot slot, Weekday day,
+      DateTime endTime, bool vibrate, bool flashLed) async {}
+  @override
+  Future<void> cancelBreakEnd(int slotId, Weekday day) async {}
   @override
   noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }

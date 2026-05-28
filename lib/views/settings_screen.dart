@@ -474,7 +474,7 @@ class _WorkingDaysCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Timers fire on checked days only. Fri & Sat are always off.',
+            'Timers fire on checked days only. Sat is always off.',
             style: GoogleFonts.patrickHand(
               fontSize: 12,
               color: AppColors.inkMuted,
@@ -485,9 +485,8 @@ class _WorkingDaysCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final label in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'])
+              for (final label in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'])
                 _SettingsDayPill(label: label, struck: false),
-              _SettingsDayPill(label: 'Fri', struck: true),
               _SettingsDayPill(label: 'Sat', struck: true),
             ],
           ),
@@ -560,20 +559,27 @@ class _NotificationsCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          _TestNotificationRow(),
-          _ToggleRow(
-            label: 'Vibrate on alert',
-            on: settings.vibrate,
-            isLast: false,
-          ),
-          _ToggleRow(
-            label: 'Flash LED on alert',
-            on: settings.flashLed,
-            isLast: true,
-          ),
-        ],
+      child: Consumer(
+        builder: (context, ref, _) {
+          final notifier = ref.read(settingsProvider.notifier);
+          return Column(
+            children: [
+              _TestNotificationRow(),
+              _ToggleRow(
+                label: 'Vibrate on alert',
+                on: settings.vibrate,
+                isLast: false,
+                onTap: notifier.toggleVibrate,
+              ),
+              _ToggleRow(
+                label: 'Flash LED on alert',
+                on: settings.flashLed,
+                isLast: true,
+                onTap: notifier.toggleFlashLed,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -584,11 +590,12 @@ class _TestNotificationRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Use slot 1 (Morning Break) as the test source. Whatever sound
     // the user picked for slot 1 is the sound we fire here.
-    final slot = ref.watch(settingsProvider).value!.slots.first;
+    final appSettings = ref.watch(settingsProvider).value!;
+    final slot = appSettings.slots.first;
 
     Future<void> fireTest() async {
       final svc = ref.read(notificationServiceProvider);
-      await svc.fireTest(slot);
+      await svc.fireTest(slot, appSettings.vibrate, appSettings.flashLed);
       final count = await svc.pendingCount();
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -669,15 +676,20 @@ class _ToggleRow extends StatelessWidget {
   final String label;
   final bool on;
   final bool isLast;
+  final VoidCallback? onTap;
   const _ToggleRow({
     required this.label,
     required this.on,
     required this.isLast,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: isLast
           ? null
@@ -724,6 +736,7 @@ class _ToggleRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -96,7 +96,8 @@ void main() {
       final restored = AppSettings.fromJson(json);
       expect(restored.perDayEnabled[Weekday.mon], true);
       expect(restored.perDayEnabled[Weekday.thu], true);
-      expect(restored.perDayEnabled[Weekday.fri], null); // not in map
+      expect(restored.perDayEnabled[Weekday.fri], true); // now a working day
+      expect(restored.perDayEnabled[Weekday.sat], null); // Sat not in map
     });
   });
 }

@@ -11,12 +11,16 @@
 //   - Tap per-slot checkbox  → A1 ↔ A2 (for that slot)
 //   - Tap a Sun–Thu chip     → switch active day (A1/A3 for that day)
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../models/app_settings.dart';
+import '../models/break_slot.dart';
 import '../models/weekday.dart';
+import '../viewmodels/countdown_provider.dart';
 import '../viewmodels/selected_day_provider.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/day_chip.dart';
@@ -77,25 +81,74 @@ class _ErrorScreen extends StatelessWidget {
 }
 
 /// The real main screen — assumes settings are loaded.
-/// This is where Steps 4–6 logic now lives.
-class _LoadedScreen extends ConsumerWidget {
+/// Stateful so a 1-second ticker can update the live countdown
+/// displays and prune expired countdowns.
+class _LoadedScreen extends ConsumerStatefulWidget {
   final AppSettings settings;
   const _LoadedScreen({required this.settings});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final today = ref.watch(selectedDayProvider);
+  ConsumerState<_LoadedScreen> createState() => _LoadedScreenState();
+}
 
-    // Demo running countdown — still hardcoded; wired in Step 13.
-    const runningSlotId = 1;
-    const runningRemaining = '16:42';
+class _LoadedScreenState extends ConsumerState<_LoadedScreen> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    // Tick once a second to refresh the MM:SS countdown labels and
+    // drop any countdown that has reached zero.
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      final running = ref.read(countdownProvider);
+      if (running.isNotEmpty) {
+        ref.read(countdownProvider.notifier).pruneExpired();
+        setState(() {}); // recompute remaining-time strings
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  /// Format the time left until [end] as MM:SS (clamped at 00:00).
+  String _formatRemaining(DateTime end) {
+    final diff = end.difference(DateTime.now());
+    if (diff.isNegative) return '00:00';
+    final m = diff.inMinutes;
+    final s = diff.inSeconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = widget.settings;
+    final today = ref.watch(selectedDayProvider);
+    final countdowns = ref.watch(countdownProvider);
+
+    // A countdown is a "right now" action, so the start/clear control
+    // is only usable when the viewed day IS the actual current day.
+    final actualToday = Weekday.fromDateTime(DateTime.now());
+    final isViewingToday = today == actualToday;
 
     final dayActuallyOn =
         settings.globalEnabled && settings.isDayEnabled(today);
 
-    // Notifier — used inside callbacks (read, not watch — we don't
-    // want this widget to rebuild when the notifier instance changes).
     final settingsNotifier = ref.read(settingsProvider.notifier);
+    final countdownNotifier = ref.read(countdownProvider.notifier);
+
+    // Build slotId → "MM:SS" only for countdowns belonging to the
+    // currently-viewed day. A countdown started on Wed shows on Wed's
+    // view only — not on Thu's, even though it's the same break slot.
+    final remainingById = <int, String>{
+      for (final slot in settings.slots)
+        if (countdowns[CountdownNotifier.keyFor(slot.id, today)]
+            case final DateTime end)
+          slot.id: _formatRemaining(end),
+    };
 
     return Scaffold(
       drawer: const PavlovianDrawer(),
@@ -126,16 +179,25 @@ class _LoadedScreen extends ConsumerWidget {
               child: _SlotList(
                 settings: settings,
                 dayActuallyOn: dayActuallyOn,
-                runningSlotId: runningSlotId,
-                runningRemaining: runningRemaining,
+                remainingById: remainingById,
+                countdownEnabled: isViewingToday,
                 onToggleSlot: settingsNotifier.toggleSlot,
+                onStartClear: (slot) {
+                  // Countdown is tied to the currently-viewed day.
+                  if (countdownNotifier.isRunning(slot.id, today)) {
+                    countdownNotifier.clear(slot.id, today);
+                  } else {
+                    countdownNotifier.start(slot, today);
+                  }
+                  setState(() {}); // reflect immediately
+                },
               ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {}, // Step 9 — opens add/edit slot sheet
+        onPressed: () {}, // Step (future) — add/edit slot sheet
         child: const Icon(Icons.add, size: 28),
       ),
     );
@@ -362,7 +424,7 @@ class _Legend extends StatelessWidget {
           child: Transform.rotate(
             angle: -0.035,
             child: Text(
-              '↓ each break runs every Sun–Thu',
+              '↓ each break runs every Sun–Fri',
               style: GoogleFonts.caveat(
                 fontSize: 14,
                 color: AppColors.warning,
@@ -419,16 +481,22 @@ class _DashedLinePainter extends CustomPainter {
 class _SlotList extends StatelessWidget {
   final AppSettings settings;
   final bool dayActuallyOn;
-  final int runningSlotId;
-  final String runningRemaining;
+
+  /// slotId → "MM:SS" for slots with a live countdown. Absent = idle.
+  final Map<int, String> remainingById;
+
+  /// Whether countdown start/clear is usable (only on the current day).
+  final bool countdownEnabled;
   final void Function(int slotId) onToggleSlot;
+  final void Function(BreakSlot slot) onStartClear;
 
   const _SlotList({
     required this.settings,
     required this.dayActuallyOn,
-    required this.runningSlotId,
-    required this.runningRemaining,
+    required this.remainingById,
+    required this.countdownEnabled,
     required this.onToggleSlot,
+    required this.onStartClear,
   });
 
   @override
@@ -442,9 +510,10 @@ class _SlotList extends StatelessWidget {
         return SlotCard(
           slot: slot,
           dayActuallyOn: dayActuallyOn,
-          runningRemaining:
-              slot.id == runningSlotId ? runningRemaining : null,
+          runningRemaining: remainingById[slot.id],
+          countdownEnabled: countdownEnabled,
           onToggleEnabled: () => onToggleSlot(slot.id),
+          onStartClear: () => onStartClear(slot),
         );
       },
     );

@@ -108,7 +108,7 @@ class _CenterBranding extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            'Sun · Mon · Tue · Wed · Thu',
+            'Sun · Mon · Tue · Wed · Thu · Fri',
             style: GoogleFonts.jetBrainsMono(
               fontSize: 10,
               color: AppColors.inkMuted,

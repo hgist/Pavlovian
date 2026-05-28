@@ -19,6 +19,7 @@
 //   well below this range so they never collide.
 
 import 'dart:async';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -76,41 +77,43 @@ class NotificationService {
 
   // ── Channels ────────────────────────────────────────────────────
 
-  /// Build the channel ID for a (slot, sound) pair. Stable — same
-  /// inputs = same ID. A sound change yields a different ID, hence
-  /// a new channel (Android won't update sound on existing channels).
-  String channelIdFor(BreakSlot slot) =>
-      'pavlovian_slot_${slot.id}_${slot.soundName.toLowerCase()}';
+  /// Build the channel ID for a (slot, sound, vibrate, led) combo.
+  /// Every behavior that Android freezes at channel-creation time is
+  /// encoded here, so changing any of them produces a NEW channel
+  /// with the new behavior (Android won't mutate an existing channel,
+  /// and even restores deleted-then-recreated channels' old settings).
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) =>
+      'pavlovian_s${slot.id}_${slot.soundName.toLowerCase()}'
+      '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}';
 
-  /// Create or update the Android notification channel for this slot.
-  /// We DELETE the existing channel first so any property change
-  /// (sound, importance, audio attrs) actually takes effect — Android
-  /// would otherwise silently keep the old settings.
-  Future<void> _ensureChannel(BreakSlot slot) async {
+  /// Create the Android notification channel for this (slot, vibrate,
+  /// led) combo if it doesn't already exist. No delete needed — a
+  /// changed setting yields a different ID.
+  Future<void> _ensureChannel(
+    BreakSlot slot,
+    bool vibrate,
+    bool flashLed,
+  ) async {
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin == null) return;
 
-    // Wipe any pre-existing channel with this ID so the new
-    // properties below take effect.
-    await androidPlugin.deleteNotificationChannel(channelIdFor(slot));
-
     final channel = AndroidNotificationChannel(
-      channelIdFor(slot),
+      channelIdFor(slot, vibrate, flashLed),
       'Pavlovian — slot ${slot.id}',
       description: 'Break reminder for "${slot.label}"',
       importance: Importance.max,
-      // Use the default notification audio stream (NOT alarm stream)
-      // since alarm-stream volume is often muted on user devices
-      // and would mean no sound. The `category: alarm` flag on
-      // AndroidNotificationDetails still gives the OS the "this is
-      // time-critical" hint without affecting which volume controls it.
+      // Default notification audio stream (not alarm stream — that one
+      // is often muted on user devices). category:alarm on the details
+      // still gives the OS the "time-critical" hint.
       sound: RawResourceAndroidNotificationSound(
         slot.soundName.toLowerCase(),
       ),
       playSound: true,
-      enableVibration: true,
+      enableVibration: vibrate,
+      enableLights: flashLed,
+      ledColor: flashLed ? const Color(0xFFE8A07A) : null,
     );
     await androidPlugin.createNotificationChannel(channel);
   }
@@ -119,17 +122,17 @@ class NotificationService {
 
   /// Fire a notification right now. Notification ID = slot.id so
   /// repeated taps replace rather than stack.
-  Future<void> fireTest(BreakSlot slot) async {
+  Future<void> fireTest(BreakSlot slot, bool vibrate, bool flashLed) async {
     try {
       await initialize();
       final granted = await requestPermission();
       if (!granted) return;
-      await _ensureChannel(slot);
+      await _ensureChannel(slot, vibrate, flashLed);
       await _plugin.show(
         slot.id,
-        'Test: ${slot.label}',
-        'Time for your break — ${slot.time.toDisplay()}',
-        _detailsFor(slot),
+        slot.label, // title = the alert label (user-defined)
+        'Test alert — ${slot.time.toDisplay()}, ${slot.soundName} sound.',
+        _detailsFor(slot, vibrate, flashLed),
       );
     } catch (e, st) {
       debugPrint('fireTest failed: $e\n$st');
@@ -164,11 +167,12 @@ class NotificationService {
       var count = 0;
       for (final slot in settings.slots) {
         if (!slot.enabled) continue;
-        await _ensureChannel(slot);
+        await _ensureChannel(slot, settings.vibrate, settings.flashLed);
 
         for (final day in Weekday.values) {
           if (!settings.isDayEnabled(day)) continue;
-          await _scheduleSlotOnDay(slot, day);
+          await _scheduleSlotOnDay(
+              slot, day, settings.vibrate, settings.flashLed);
           count++;
         }
       }
@@ -190,6 +194,55 @@ class NotificationService {
     }
   }
 
+  // ── End-of-break countdown (Step 13) ───────────────────────────
+
+  /// Notification ID for an end-of-break countdown. Encodes both the
+  /// slot and the day so per-(slot, day) countdowns don't collide:
+  ///   id = 500 + slotId*10 + day.index
+  /// Range 510..536 — clear of recurring (100..306) and test (1..3).
+  int _breakEndId(int slotId, Weekday day) => 500 + slotId * 10 + day.index;
+
+  /// Schedule a one-shot "break over" notification at [endTime] for a
+  /// specific (slot, day).
+  Future<void> scheduleBreakEnd(
+    BreakSlot slot,
+    Weekday day,
+    DateTime endTime,
+    bool vibrate,
+    bool flashLed,
+  ) async {
+    try {
+      await initialize();
+      await _ensureChannel(slot, vibrate, flashLed);
+      final when = tz.TZDateTime.from(endTime, tz.local);
+      await _plugin.zonedSchedule(
+        _breakEndId(slot.id, day),
+        slot.label, // title = the alert label (user-defined)
+        'Break over — your ${slot.durationMinutes}-minute break has '
+            'ended. Time to head back.',
+        when,
+        _detailsFor(slot, vibrate, flashLed),
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        // No matchDateTimeComponents → fires once, not recurring.
+      );
+      debugPrint('scheduleBreakEnd: slot ${slot.id}/${day.label} ends $when');
+    } catch (e, st) {
+      debugPrint('scheduleBreakEnd FAILED: $e\n$st');
+    }
+  }
+
+  /// Cancel a pending end-of-break notification for (slotId, day).
+  Future<void> cancelBreakEnd(int slotId, Weekday day) async {
+    try {
+      await initialize();
+      await _plugin.cancel(_breakEndId(slotId, day));
+    } catch (e) {
+      debugPrint('cancelBreakEnd failed: $e');
+    }
+  }
+
   /// Cancel all schedule-range IDs (100..399). Idempotent.
   Future<void> _cancelAllScheduled() async {
     for (var slotId = 1; slotId <= 3; slotId++) {
@@ -201,7 +254,12 @@ class NotificationService {
 
   /// Schedule a single weekly-recurring notification for this slot on
   /// this weekday. Idempotent because Android replaces by ID.
-  Future<void> _scheduleSlotOnDay(BreakSlot slot, Weekday day) async {
+  Future<void> _scheduleSlotOnDay(
+    BreakSlot slot,
+    Weekday day,
+    bool vibrate,
+    bool flashLed,
+  ) async {
     final id = _idFor(slot.id, day.index);
     final firstFire = _nextInstanceOf(
       _dartWeekday(day),
@@ -211,10 +269,11 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       id,
-      'Pavlovian: ${slot.label}',
-      'Time for your break — ${slot.time.toDisplay()}',
+      slot.label, // title = the alert label (user-defined)
+      "Break time — it's ${slot.time.toDisplay()}. "
+          'Enjoy your ${slot.durationMinutes} minutes.',
       firstFire,
-      _detailsFor(slot),
+      _detailsFor(slot, vibrate, flashLed),
       // alarmClock = setAlarmClock() under the hood. Same priority
       // as the built-in clock app's alarms — bypasses Doze, battery
       // optimization, Samsung's "sleeping apps" list, and the
@@ -266,19 +325,31 @@ class NotificationService {
 
   int _idFor(int slotId, int dayIdx) => slotId * 100 + dayIdx;
 
-  NotificationDetails _detailsFor(BreakSlot slot) {
+  NotificationDetails _detailsFor(
+    BreakSlot slot,
+    bool vibrate,
+    bool flashLed,
+  ) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        channelIdFor(slot),
+        channelIdFor(slot, vibrate, flashLed),
         'Pavlovian — slot ${slot.id}',
         channelDescription: 'Break reminder',
         importance: Importance.max,
         priority: Priority.max,
         icon: '@mipmap/ic_launcher',
-        // Tells Android this is alarm-class — survives DND, plays
-        // on alarm-volume stream, less likely to be suppressed.
+        // Tells Android this is alarm-class — survives DND, less
+        // likely to be suppressed.
         category: AndroidNotificationCategory.alarm,
         playSound: true,
+        // Channel governs these on Android 8+, but set them here too
+        // for pre-O devices. ledOnMs/ledOffMs are REQUIRED whenever
+        // lights are enabled (blink cycle) or the plugin throws.
+        enableVibration: vibrate,
+        enableLights: flashLed,
+        ledColor: flashLed ? const Color(0xFFE8A07A) : null,
+        ledOnMs: flashLed ? 1000 : null,
+        ledOffMs: flashLed ? 500 : null,
       ),
     );
   }

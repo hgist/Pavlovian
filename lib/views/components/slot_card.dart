@@ -27,12 +27,23 @@ class SlotCard extends StatelessWidget {
   /// Optional so the card can also render as visual-only.
   final VoidCallback? onToggleEnabled;
 
+  /// Called when the ▶ start / ■ clear button is tapped.
+  final VoidCallback? onStartClear;
+
+  /// Whether the countdown start/clear control is usable. False when
+  /// viewing a day other than the actual current day — a countdown is
+  /// a "right now" action, so it's greyed-out and non-tappable for
+  /// other days.
+  final bool countdownEnabled;
+
   const SlotCard({
     super.key,
     required this.slot,
     required this.dayActuallyOn,
     this.runningRemaining,
     this.onToggleEnabled,
+    this.onStartClear,
+    this.countdownEnabled = true,
   });
 
   @override
@@ -130,7 +141,7 @@ class SlotCard extends StatelessWidget {
                   Text(
                     running
                         ? '⏱ $runningRemaining left'
-                        : (slot.enabled ? 'every Sun–Thu' : 'off — whole week'),
+                        : (slot.enabled ? 'every Sun–Fri' : 'off — whole week'),
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       color: running ? AppColors.warning : AppColors.inkMuted,
@@ -143,9 +154,14 @@ class SlotCard extends StatelessWidget {
             ),
             const SizedBox(width: 6),
 
-            // ── Start / Clear button (hidden when dim) ────────────
+            // ── Start / Clear button (hidden when dim, greyed when
+            //     viewing a non-current day) ─────────────────────────
             if (!dim) ...[
-              _BreakButton(running: running),
+              _BreakButton(
+                running: running,
+                enabled: countdownEnabled,
+                onTap: countdownEnabled ? onStartClear : null,
+              ),
               const SizedBox(width: 6),
             ],
 
@@ -168,33 +184,47 @@ class SlotCard extends StatelessWidget {
 /// Visual only at this stage.
 class _BreakButton extends StatelessWidget {
   final bool running;
-  const _BreakButton({required this.running});
+  final bool enabled;
+  final VoidCallback? onTap;
+  const _BreakButton({
+    required this.running,
+    this.enabled = true,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-      decoration: BoxDecoration(
-        color: running ? AppColors.terracotta : Colors.transparent,
-        border: Border.all(color: AppColors.ink, width: 1.5),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: running
-            ? const [
-                BoxShadow(
-                  color: AppColors.ink,
-                  offset: Offset(1, 1),
-                  blurRadius: 0,
-                ),
-              ]
-            : null,
-      ),
-      child: Text(
-        running ? '■ clear' : '▶ start',
-        style: GoogleFonts.caveat(
-          fontSize: 12,
-          color: AppColors.ink,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.3,
+    return Opacity(
+      // Greyed-out when disabled (non-current day).
+      opacity: enabled ? 1.0 : 0.3,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? onTap : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+          decoration: BoxDecoration(
+            color: running ? AppColors.terracotta : Colors.transparent,
+            border: Border.all(color: AppColors.ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: running
+                ? const [
+                    BoxShadow(
+                      color: AppColors.ink,
+                      offset: Offset(1, 1),
+                      blurRadius: 0,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            running ? '■ clear' : '▶ start',
+            style: GoogleFonts.caveat(
+              fontSize: 12,
+              color: AppColors.ink,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
         ),
       ),
     );

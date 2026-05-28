@@ -59,12 +59,14 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(current.copyWith(globalEnabled: !current.globalEnabled));
   }
 
-  /// Flip a working day's master switch (Layer 2). No-op for Fri/Sat.
+  /// Flip a working day's master switch (Layer 2). No-op for Saturday.
   Future<void> toggleDay(Weekday day) async {
     if (!day.isWorking) return;
     final current = _current;
     if (current == null) return;
-    final isOn = current.perDayEnabled[day] ?? false;
+    // Use isDayEnabled so the "absent working day defaults to on"
+    // rule stays consistent with what the UI shows.
+    final isOn = current.isDayEnabled(day);
     await _update(current.copyWith(
       perDayEnabled: {...current.perDayEnabled, day: !isOn},
     ));
@@ -129,6 +131,20 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     if (current == null) return;
     final slot = current.slots.firstWhere((s) => s.id == slotId);
     await _update(current.withUpdatedSlot(slot.copyWith(soundName: newSoundName)));
+  }
+
+  /// Toggle the global "vibrate on alert" preference.
+  Future<void> toggleVibrate() async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(vibrate: !current.vibrate));
+  }
+
+  /// Toggle the global "flash LED on alert" preference.
+  Future<void> toggleFlashLed() async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(flashLed: !current.flashLed));
   }
 
   /// Reset all settings to factory defaults AND clear persisted data.

@@ -111,19 +111,29 @@ The design is fully specified in 6 HTML wireframes at the project root:
 Visual style: pen-stroke borders, dashed separators, slight offset drop-shadows for a hand-drawn feel.
 
 ## Versioning convention
-`pubspec.yaml` uses the format `version: 1.0.X+X` where the SemVer
-patch (the last part of `X.Y.Z`) and the Android versionCode (the
-number after `+`) are **always equal**. Bump them together via the
-helper script:
+`pubspec.yaml` uses `MAJOR.MINOR.PATCH+BUILD` where **PATCH == BUILD**
+(Android versionCode) at all times.
+
+- **MAJOR** — major release / rewrite (manual; stays 1 for now)
+- **MINOR** — "app evolvement": bump when a roadmap phase / significant
+  feature set is completed. (Baseline minor = 4 = Phases 1–4 done.)
+- **PATCH** — monotonic build counter: +1 on EVERY build, never resets
+- **BUILD** — kept equal to PATCH
+
+On a minor/major bump the patch/build keep counting (no reset) so the
+build number is a true monotonic dev counter.
+
+Bump via the helper (run before each build):
 ```
-dart run tools/bump_version.dart            # patch += 1, build = patch
-dart run tools/bump_version.dart 7          # patch = 7,  build = 7
-dart run tools/bump_version.dart 1.1.0      # full semver, build = patch
+dart run tools/bump_version.dart            # = build: patch+1, build=patch
+dart run tools/bump_version.dart build      # same
+dart run tools/bump_version.dart minor      # minor+1 AND patch+1
+dart run tools/bump_version.dart major      # major+1 AND patch+1
+dart run tools/bump_version.dart set 1.5.0  # set exact X.Y.Z, build=patch
 ```
 The version is read at runtime by `lib/services/app_version.dart`
 (`package_info_plus`) and surfaced via `appVersionProvider`, so the
-splash, drawer footer, and settings header always reflect what's in
-pubspec.yaml — no hardcoded strings.
+splash, drawer footer, and settings header always reflect pubspec.yaml.
 
 ## Build & Run
 ```

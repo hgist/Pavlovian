@@ -27,13 +27,20 @@ class _StubNotificationService implements NotificationService {
   Future<bool> requestPermission() async => true;
 
   @override
-  String channelIdFor(BreakSlot slot) => 'stub';
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) => 'stub';
 
   @override
-  Future<void> fireTest(BreakSlot slot) async {}
+  Future<void> fireTest(BreakSlot slot, bool vibrate, bool flashLed) async {}
 
   @override
   Future<void> scheduleAll(AppSettings settings) async {}
+
+  @override
+  Future<void> scheduleBreakEnd(BreakSlot slot, Weekday day,
+      DateTime endTime, bool vibrate, bool flashLed) async {}
+
+  @override
+  Future<void> cancelBreakEnd(int slotId, Weekday day) async {}
 
   // The interface is exposed via `implements`, so any methods we
   // don't reference here just throw — which is fine, tests don't
@@ -92,17 +99,25 @@ void main() {
       expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.tue), true);
     });
 
-    test('toggleDay is a no-op for Fri & Sat', () async {
+    test('toggleDay works for Friday (now a working day)', () async {
+      final c = makeContainer();
+      final n = c.read(settingsProvider.notifier);
+      await c.read(settingsProvider.future);
+
+      expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.fri), true);
+      await n.toggleDay(Weekday.fri);
+      expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.fri), false);
+    });
+
+    test('toggleDay is a no-op for Saturday', () async {
       final c = makeContainer();
       final n = c.read(settingsProvider.notifier);
       final before = await c.read(settingsProvider.future);
 
-      await n.toggleDay(Weekday.fri);
       await n.toggleDay(Weekday.sat);
 
       expect(c.read(settingsProvider).value!.perDayEnabled,
           equals(before.perDayEnabled));
-      expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.fri), false);
       expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.sat), false);
     });
 
@@ -232,6 +247,24 @@ void main() {
       expect(c.read(settingsProvider).value!.slots[0].soundName, 'Bell');
       // Other slots untouched
       expect(c.read(settingsProvider).value!.slots[1].soundName, 'Chime');
+    });
+
+    test('toggleVibrate flips and persists', () async {
+      final c = makeContainer();
+      final n = c.read(settingsProvider.notifier);
+      await c.read(settingsProvider.future);
+      expect(c.read(settingsProvider).value!.vibrate, true);
+      await n.toggleVibrate();
+      expect(c.read(settingsProvider).value!.vibrate, false);
+    });
+
+    test('toggleFlashLed flips and persists', () async {
+      final c = makeContainer();
+      final n = c.read(settingsProvider.notifier);
+      await c.read(settingsProvider.future);
+      expect(c.read(settingsProvider).value!.flashLed, false);
+      await n.toggleFlashLed();
+      expect(c.read(settingsProvider).value!.flashLed, true);
     });
 
     test('per-slot updates survive container rebuild (persisted)',

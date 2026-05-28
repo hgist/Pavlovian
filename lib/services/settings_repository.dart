@@ -48,6 +48,35 @@ class SettingsRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
+
+  // ── Countdown persistence (Step 13) ────────────────────────────
+  // Stores active end-of-break countdowns as {"slotId_dayIndex":
+  // epochMillis} so the live MM:SS display survives an app restart
+  // and stays in sync with the OS-scheduled "break over" notification.
+  static const _countdownKey = 'countdowns_v2';
+
+  Future<Map<String, DateTime>> loadCountdowns() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_countdownKey);
+    if (raw == null) return {};
+    try {
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      return json.map((k, v) => MapEntry(
+            k,
+            DateTime.fromMillisecondsSinceEpoch(v as int),
+          ));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> saveCountdowns(Map<String, DateTime> countdowns) async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = countdowns.map(
+      (k, v) => MapEntry(k, v.millisecondsSinceEpoch),
+    );
+    await prefs.setString(_countdownKey, jsonEncode(json));
+  }
 }
 
 /// Provider exposing a single SettingsRepository instance to the rest
