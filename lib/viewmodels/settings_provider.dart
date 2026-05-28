@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/app_settings.dart';
 import '../models/break_time.dart';
 import '../models/weekday.dart';
+import '../services/notification_service.dart';
 import '../services/settings_repository.dart';
 
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
@@ -30,7 +31,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
   Future<AppSettings> build() async {
     final repo = ref.read(settingsRepositoryProvider);
-    return await repo.load();
+    final loaded = await repo.load();
+    // Schedule everything based on the just-loaded settings. Fire-and-
+    // forget so SplashGate doesn't wait on scheduling I/O.
+    // ignore: discarded_futures
+    ref.read(notificationServiceProvider).scheduleAll(loaded);
+    return loaded;
   }
 
   /// Helper: return the current AppSettings or null if not yet loaded.
@@ -38,10 +44,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   /// so this never returns null in normal flow.
   AppSettings? get _current => state.value;
 
-  /// Helper: update state in memory + persist to disk.
+  /// Helper: update state in memory + persist to disk + re-schedule
+  /// the OS-level notifications so they match the new settings.
   Future<void> _update(AppSettings next) async {
     state = AsyncData(next);
     await ref.read(settingsRepositoryProvider).save(next);
+    await ref.read(notificationServiceProvider).scheduleAll(next);
   }
 
   /// Flip the global ALL master switch (Layer 1).

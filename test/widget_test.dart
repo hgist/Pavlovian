@@ -3,11 +3,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pavlovian/main.dart';
+import 'package:pavlovian/models/app_settings.dart';
+import 'package:pavlovian/models/break_slot.dart';
 import 'package:pavlovian/models/weekday.dart';
 import 'package:pavlovian/services/app_version.dart';
+import 'package:pavlovian/services/notification_service.dart';
 import 'package:pavlovian/viewmodels/selected_day_provider.dart';
 import 'package:pavlovian/views/components/menu_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// No-op notification service so widget tests don't hit the
+/// platform plugin (which has no implementation in test env).
+class _StubNotificationService implements NotificationService {
+  @override
+  Future<void> initialize() async {}
+  @override
+  Future<bool> requestPermission() async => true;
+  @override
+  String channelIdFor(BreakSlot slot) => 'stub';
+  @override
+  Future<void> fireTest(BreakSlot slot) async {}
+  @override
+  Future<void> scheduleAll(AppSettings settings) async {}
+  @override
+  noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
 
 void main() {
   setUp(() {
@@ -25,6 +45,8 @@ void main() {
             const AppVersion(version: '1.0.0', buildNumber: '1'),
           ),
           selectedDayProvider.overrideWith((ref) => Weekday.mon),
+          notificationServiceProvider
+              .overrideWithValue(_StubNotificationService()),
         ],
         child: const PavlovianApp(splashDuration: Duration.zero),
       ),

@@ -62,6 +62,11 @@ dependencies:
   # Notification sounds reference res/raw/*.wav by channel id.
   flutter_local_notifications: ^18.0.1
 
+  # Timezone database + device-local timezone lookup, required by
+  # `zonedSchedule(...)` for DST-correct recurring alarms.
+  timezone: ^0.10.0
+  flutter_timezone: ^4.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

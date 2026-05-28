@@ -589,14 +589,15 @@ class _TestNotificationRow extends ConsumerWidget {
     Future<void> fireTest() async {
       final svc = ref.read(notificationServiceProvider);
       await svc.fireTest(slot);
+      final count = await svc.pendingCount();
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Test notification fired (${slot.soundName})',
+            'Test fired (${slot.soundName}) · $count scheduled',
             style: GoogleFonts.patrickHand(fontSize: 14),
           ),
-          duration: const Duration(seconds: 2),
+          duration: const Duration(seconds: 3),
           backgroundColor: AppColors.ink,
         ),
       );

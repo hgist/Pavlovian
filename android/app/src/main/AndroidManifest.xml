@@ -3,6 +3,20 @@
          On older versions this is granted automatically at install time. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Lets us schedule exact alarms so break notifications fire at
+         the configured minute (not delayed by Doze). Auto-granted on
+         Android < 12; declared here so manifest-merger keeps it. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Fallback for Android 14+ where SCHEDULE_EXACT_ALARM moved to
+         a separate user-grant flow; this one still works on 14+ for
+         "no-reboot" use-cases like ours. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+    <!-- Required by flutter_local_notifications for the boot receiver
+         (re-arm alarms after reboot) and vibration on alert. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:label="Pavlovian"
         android:name="${applicationName}"
@@ -34,6 +48,29 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- ── flutter_local_notifications receivers ──────────────────
+             REQUIRED for scheduled (zonedSchedule) notifications to be
+             delivered. Without these, the alarm fires but Android has
+             no declared receiver to show the notification, so it is
+             silently dropped. This was the root cause of scheduled
+             alarms never appearing (on both emulator and device). -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

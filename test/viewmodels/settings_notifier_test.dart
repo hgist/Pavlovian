@@ -9,10 +9,38 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pavlovian/models/app_settings.dart';
+import 'package:pavlovian/models/break_slot.dart';
 import 'package:pavlovian/models/break_time.dart';
 import 'package:pavlovian/models/weekday.dart';
+import 'package:pavlovian/services/notification_service.dart';
 import 'package:pavlovian/viewmodels/settings_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Test stub — no-ops everything so tests don't touch the platform
+/// notifications plugin. Overrides notificationServiceProvider below.
+class _StubNotificationService implements NotificationService {
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<bool> requestPermission() async => true;
+
+  @override
+  String channelIdFor(BreakSlot slot) => 'stub';
+
+  @override
+  Future<void> fireTest(BreakSlot slot) async {}
+
+  @override
+  Future<void> scheduleAll(AppSettings settings) async {}
+
+  // The interface is exposed via `implements`, so any methods we
+  // don't reference here just throw — which is fine, tests don't
+  // touch them.
+  @override
+  noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
 
 void main() {
   setUp(() {
@@ -20,7 +48,11 @@ void main() {
   });
 
   ProviderContainer makeContainer() {
-    final c = ProviderContainer();
+    final c = ProviderContainer(
+      overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ],
+    );
     addTearDown(c.dispose);
     return c;
   }
@@ -92,7 +124,9 @@ void main() {
     test('changes survive a container rebuild (true persistence)',
         () async {
       // Container 1: turn global off
-      final c1 = ProviderContainer();
+      final c1 = ProviderContainer(overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ]);
       final n1 = c1.read(settingsProvider.notifier);
       await c1.read(settingsProvider.future);
       await n1.toggleGlobal();
@@ -100,14 +134,18 @@ void main() {
       c1.dispose();
 
       // Container 2 (fresh — simulates app relaunch): global stays off
-      final c2 = ProviderContainer();
+      final c2 = ProviderContainer(overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ]);
       addTearDown(c2.dispose);
       final loaded = await c2.read(settingsProvider.future);
       expect(loaded.globalEnabled, false);
     });
 
     test('resetToDefaults wipes persisted state', () async {
-      final c1 = ProviderContainer();
+      final c1 = ProviderContainer(overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ]);
       final n1 = c1.read(settingsProvider.notifier);
       await c1.read(settingsProvider.future);
       await n1.toggleGlobal(); // dirty state
@@ -115,7 +153,9 @@ void main() {
       c1.dispose();
 
       // Fresh container — should see defaults again
-      final c2 = ProviderContainer();
+      final c2 = ProviderContainer(overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ]);
       addTearDown(c2.dispose);
       final loaded = await c2.read(settingsProvider.future);
       expect(loaded.globalEnabled, true);
@@ -197,7 +237,9 @@ void main() {
     test('per-slot updates survive container rebuild (persisted)',
         () async {
       // Container 1: rename Morning Break + change Lunch duration
-      final c1 = ProviderContainer();
+      final c1 = ProviderContainer(overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ]);
       final n1 = c1.read(settingsProvider.notifier);
       await c1.read(settingsProvider.future);
       await n1.setSlotLabel(1, 'Stretch break');
@@ -205,7 +247,9 @@ void main() {
       c1.dispose();
 
       // Container 2: fresh load — changes still there
-      final c2 = ProviderContainer();
+      final c2 = ProviderContainer(overrides: [
+        notificationServiceProvider.overrideWithValue(_StubNotificationService()),
+      ]);
       addTearDown(c2.dispose);
       final loaded = await c2.read(settingsProvider.future);
       expect(loaded.slots[0].label, 'Stretch break');
