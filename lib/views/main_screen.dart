@@ -196,10 +196,7 @@ class _LoadedScreenState extends ConsumerState<_LoadedScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {}, // Step (future) — add/edit slot sheet
-        child: const Icon(Icons.add, size: 28),
-      ),
+      // FAB removed — slot add/remove lives in Settings now.
     );
   }
 }

@@ -65,6 +65,7 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   const _SectionHeader('① Break Slots'),
                   ...settings.slots.map((s) => _SlotCard(slot: s)),
+                  const _AddBreakButton(),
                   const _SectionHeader('② Working Days'),
                   _WorkingDaysCard(settings: settings),
                   const _SectionHeader('③ Notifications'),
@@ -237,10 +238,12 @@ class _SlotCard extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Slot header row — tap "edit label" to rename
+          // Slot header row — tap "edit label" to rename,
+          //                  long-press to delete (with confirm).
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => _editLabel(context, notifier),
+            onLongPress: () => _confirmDelete(context, notifier),
             child: Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
               decoration: BoxDecoration(
@@ -362,10 +365,71 @@ class _SlotCard extends ConsumerWidget {
     await notifier.setSlotLabel(slot.id, newLabel);
   }
 
+  /// Long-press handler — confirms then deletes the slot.
+  Future<void> _confirmDelete(
+      BuildContext context, dynamic notifier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.paperLight,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: AppColors.ink, width: 2),
+        ),
+        title: Text(
+          'Delete "${slot.label}"?',
+          style: GoogleFonts.architectsDaughter(
+            fontSize: 18,
+            color: AppColors.warning,
+          ),
+        ),
+        content: Text(
+          'This break and its alarms will be removed.',
+          style: GoogleFonts.patrickHand(fontSize: 14, color: AppColors.ink),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'cancel',
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                color: AppColors.inkMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'delete',
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                color: AppColors.warning,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await notifier.removeSlot(slot.id);
+    }
+  }
+
   Future<void> _editSound(BuildContext context, dynamic notifier) async {
-    final newSound = await EditSoundSheet.show(context, slot.soundName);
-    if (newSound == null) return;
-    await notifier.setSlotSound(slot.id, newSound);
+    final picked = await EditSoundSheet.show(
+      context,
+      slot.soundName,
+      currentUri: slot.soundUri,
+    );
+    if (picked == null) return;
+    await notifier.setSlotSound(
+      slot.id,
+      picked.name,
+      newSoundUri: picked.uri,
+    );
   }
 }
 
@@ -586,6 +650,24 @@ class _NotificationsCard extends StatelessWidget {
           return Column(
             children: [
               _TestNotificationRow(),
+              _SettingRow(
+                label: 'Alert sound',
+                value: settings.testSoundName,
+                accent: true,
+                onTap: () async {
+                  final picked = await EditSoundSheet.show(
+                    context,
+                    settings.testSoundName,
+                    currentUri: settings.testSoundUri,
+                  );
+                  if (picked != null) {
+                    await notifier.setTestSound(
+                      picked.name,
+                      newSoundUri: picked.uri,
+                    );
+                  }
+                },
+              ),
               _ToggleRow(
                 label: 'Vibrate on alert',
                 on: settings.vibrate,
@@ -609,20 +691,22 @@ class _NotificationsCard extends StatelessWidget {
 class _TestNotificationRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use slot 1 (Morning Break) as the test source. Whatever sound
-    // the user picked for slot 1 is the sound we fire here.
     final appSettings = ref.watch(settingsProvider).value!;
-    final slot = appSettings.slots.first;
 
     Future<void> fireTest() async {
       final svc = ref.read(notificationServiceProvider);
-      await svc.fireTest(slot, appSettings.vibrate, appSettings.flashLed);
+      await svc.fireTest(
+        appSettings.testSoundName,
+        appSettings.vibrate,
+        appSettings.flashLed,
+        soundUri: appSettings.testSoundUri,
+      );
       final count = await svc.pendingCount();
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Test fired (${slot.soundName}) · $count scheduled',
+            'Test fired (${appSettings.testSoundName}) · $count scheduled',
             style: GoogleFonts.patrickHand(fontSize: 14),
           ),
           duration: const Duration(seconds: 3),
@@ -766,15 +850,81 @@ class _ToggleRow extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────
 // ④ Reset danger card
 // ─────────────────────────────────────────────────────────────────
-class _ResetCard extends StatelessWidget {
+class _ResetCard extends ConsumerWidget {
   const _ResetCard();
 
+  Future<void> _confirmAndReset(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.paperLight,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: AppColors.ink, width: 2),
+        ),
+        title: Text(
+          'Reset all settings?',
+          style: GoogleFonts.architectsDaughter(
+            fontSize: 18,
+            color: AppColors.warning,
+          ),
+        ),
+        content: Text(
+          "All times, durations, labels and toggles return to defaults. "
+              "Your selected test sound is kept (slot sounds match it).",
+          style: GoogleFonts.patrickHand(fontSize: 14, color: AppColors.ink),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'cancel',
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                color: AppColors.inkMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'reset',
+              style: GoogleFonts.caveat(
+                fontSize: 16,
+                color: AppColors.warning,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(settingsProvider.notifier).resetToDefaults();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Settings reset to defaults.',
+            style: GoogleFonts.patrickHand(fontSize: 14),
+          ),
+          backgroundColor: AppColors.ink,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _confirmAndReset(context, ref),
+          child: Container(
           margin: const EdgeInsets.fromLTRB(14, 0, 14, 6),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(
@@ -829,6 +979,7 @@ class _ResetCard extends StatelessWidget {
             ],
           ),
         ),
+        ),
         // Tilted annotation
         Padding(
           padding: const EdgeInsets.fromLTRB(22, 0, 14, 0),
@@ -879,4 +1030,42 @@ class _WarningTrianglePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// + Add a break — appears after the last slot card.
+// Creates a new slot with sensible defaults (sound = current
+// testSoundName per the user's "defaults follow test sound" rule).
+// ─────────────────────────────────────────────────────────────────
+class _AddBreakButton extends ConsumerWidget {
+  const _AddBreakButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => ref.read(settingsProvider.notifier).addSlot(),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.terracotta.withValues(alpha: 0.10),
+          border: Border.all(
+              color: AppColors.ink, width: 2),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Center(
+          child: Text(
+            '+  Add a break',
+            style: GoogleFonts.caveat(
+              fontSize: 17,
+              color: AppColors.ink,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

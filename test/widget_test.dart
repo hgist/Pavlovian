@@ -22,7 +22,9 @@ class _StubNotificationService implements NotificationService {
   @override
   String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) => 'stub';
   @override
-  Future<void> fireTest(BreakSlot slot, bool vibrate, bool flashLed) async {}
+  Future<void> fireTest(
+      String soundName, bool vibrate, bool flashLed,
+      {String? soundUri}) async {}
   @override
   Future<void> scheduleAll(AppSettings settings) async {}
   @override

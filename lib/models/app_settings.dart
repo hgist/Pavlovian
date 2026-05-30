@@ -12,6 +12,10 @@ import 'weekday.dart';
 /// on "Reset All to Defaults".
 const String kDefaultSoundName = 'Chime';
 
+/// Internal sentinel for nullable copyWith parameters (so callers can
+/// distinguish "not passed" from "passed as null").
+const Object _undefinedSettings = Object();
+
 class AppSettings {
   /// Layer 1 of the enable hierarchy — the global ALL pill switch.
   /// When false, nothing fires regardless of other settings.
@@ -29,17 +33,32 @@ class AppSettings {
   final bool vibrate;
   final bool flashLed;
 
+  /// Display name of the sound used by the manual "▶ test" button.
+  final String testSoundName;
+
+  /// Optional system-ringtone URI for the test sound. `null` means
+  /// the test uses one of our bundled sounds — [testSoundName] is the
+  /// resource name then.
+  final String? testSoundUri;
+
   const AppSettings({
     required this.globalEnabled,
     required this.perDayEnabled,
     required this.slots,
     required this.vibrate,
     required this.flashLed,
+    required this.testSoundName,
+    this.testSoundUri,
   });
 
-  /// Factory defaults — exact spec from CLAUDE.md.
-  /// Used on first install and after "Reset All to Defaults".
-  factory AppSettings.defaults() {
+  /// Factory defaults.
+  ///
+  /// [soundName] becomes the alert sound for ALL slot defaults AND for
+  /// the Test notification — they're always in sync. On first install
+  /// this is "Chime". On "Reset All to Defaults" the SettingsNotifier
+  /// passes the current testSoundName so the user's preferred sound is
+  /// preserved across resets.
+  factory AppSettings.defaults({String soundName = kDefaultSoundName}) {
     return AppSettings(
       globalEnabled: true,
       perDayEnabled: const {
@@ -51,31 +70,32 @@ class AppSettings {
         Weekday.fri: true,
         Weekday.sat: true,
       },
-      slots: const [
+      slots: [
         BreakSlot(
           id: 1,
           label: 'Morning Break',
-          time: BreakTime(10, 0),
+          time: const BreakTime(10, 0),
           durationMinutes: 20,
-          soundName: kDefaultSoundName,
+          soundName: soundName,
         ),
         BreakSlot(
           id: 2,
           label: 'Lunch Break',
-          time: BreakTime(12, 30),
+          time: const BreakTime(12, 30),
           durationMinutes: 45,
-          soundName: kDefaultSoundName,
+          soundName: soundName,
         ),
         BreakSlot(
           id: 3,
           label: 'Afternoon Break',
-          time: BreakTime(15, 0),
+          time: const BreakTime(15, 0),
           durationMinutes: 20,
-          soundName: kDefaultSoundName,
+          soundName: soundName,
         ),
       ],
       vibrate: true,
       flashLed: false,
+      testSoundName: soundName,
     );
   }
 
@@ -85,6 +105,8 @@ class AppSettings {
     List<BreakSlot>? slots,
     bool? vibrate,
     bool? flashLed,
+    String? testSoundName,
+    Object? testSoundUri = _undefinedSettings,
   }) {
     return AppSettings(
       globalEnabled: globalEnabled ?? this.globalEnabled,
@@ -92,6 +114,10 @@ class AppSettings {
       slots: slots ?? this.slots,
       vibrate: vibrate ?? this.vibrate,
       flashLed: flashLed ?? this.flashLed,
+      testSoundName: testSoundName ?? this.testSoundName,
+      testSoundUri: identical(testSoundUri, _undefinedSettings)
+          ? this.testSoundUri
+          : testSoundUri as String?,
     );
   }
 
@@ -136,6 +162,8 @@ class AppSettings {
         'slots': slots.map((s) => s.toJson()).toList(),
         'vibrate': vibrate,
         'flashLed': flashLed,
+        'testSoundName': testSoundName,
+        if (testSoundUri != null) 'testSoundUri': testSoundUri,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -154,6 +182,9 @@ class AppSettings {
       slots: slotsList,
       vibrate: json['vibrate'] as bool,
       flashLed: json['flashLed'] as bool,
+      // Fallback for older installs whose JSON predates testSoundName.
+      testSoundName: json['testSoundName'] as String? ?? kDefaultSoundName,
+      testSoundUri: json['testSoundUri'] as String?,
     );
   }
 }

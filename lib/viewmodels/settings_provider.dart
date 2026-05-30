@@ -18,6 +18,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/app_settings.dart';
+import '../models/break_slot.dart';
 import '../models/break_time.dart';
 import '../models/weekday.dart';
 import '../services/notification_service.dart';
@@ -123,14 +124,20 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(current.withUpdatedSlot(slot.copyWith(label: trimmed)));
   }
 
-  /// Set a slot's alert sound (Chime, Bell, …). Names are not
-  /// validated here — caller (the sound picker, Step 10) only
-  /// passes the bundled-asset names.
-  Future<void> setSlotSound(int slotId, String newSoundName) async {
+  /// Set a slot's alert sound. [newSoundUri] is `null` for bundled
+  /// sounds (Chime/Bell/…) and a `content://…` URI when the user
+  /// picked a system ringtone (e.g. Samsung's Spaceline).
+  Future<void> setSlotSound(
+    int slotId,
+    String newSoundName, {
+    String? newSoundUri,
+  }) async {
     final current = _current;
     if (current == null) return;
     final slot = current.slots.firstWhere((s) => s.id == slotId);
-    await _update(current.withUpdatedSlot(slot.copyWith(soundName: newSoundName)));
+    await _update(current.withUpdatedSlot(
+      slot.copyWith(soundName: newSoundName, soundUri: newSoundUri),
+    ));
   }
 
   /// Toggle the global "vibrate on alert" preference.
@@ -147,11 +154,56 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(current.copyWith(flashLed: !current.flashLed));
   }
 
-  /// Reset all settings to factory defaults AND clear persisted data.
-  /// Used by "Reset All to Defaults" in Step 9+ and by tests.
+  /// Pick the sound used by the manual "▶ test" button.
+  /// [newSoundUri] is `null` for bundled sounds.
+  Future<void> setTestSound(
+    String newSoundName, {
+    String? newSoundUri,
+  }) async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(
+      testSoundName: newSoundName,
+      testSoundUri: newSoundUri,
+    ));
+  }
+
+  /// Reset all settings to defaults. Preserves the user's currently-
+  /// chosen test sound — slot defaults are rebuilt using that sound
+  /// so the alert tone stays consistent across reset.
   Future<void> resetToDefaults() async {
-    state = AsyncData(AppSettings.defaults());
-    await ref.read(settingsRepositoryProvider).reset();
+    final preservedSound =
+        _current?.testSoundName ?? kDefaultSoundName;
+    final next = AppSettings.defaults(soundName: preservedSound);
+    state = AsyncData(next);
+    await ref.read(settingsRepositoryProvider).save(next);
+    await ref.read(notificationServiceProvider).scheduleAll(next);
+  }
+
+  /// Append a new break slot. Time defaults to noon, duration 20 min,
+  /// sound = current testSoundName. ID = max existing id + 1.
+  Future<void> addSlot() async {
+    final current = _current;
+    if (current == null) return;
+    final maxId = current.slots.isEmpty
+        ? 0
+        : current.slots.map((s) => s.id).reduce((a, b) => a > b ? a : b);
+    final newSlot = BreakSlot(
+      id: maxId + 1,
+      label: 'Break ${maxId + 1}',
+      time: const BreakTime(12, 0),
+      durationMinutes: 20,
+      soundName: current.testSoundName,
+    );
+    await _update(current.copyWith(slots: [...current.slots, newSlot]));
+  }
+
+  /// Remove a slot by id.
+  Future<void> removeSlot(int slotId) async {
+    final current = _current;
+    if (current == null) return;
+    final next = current.slots.where((s) => s.id != slotId).toList();
+    await _update(current.copyWith(slots: next));
   }
 }
 

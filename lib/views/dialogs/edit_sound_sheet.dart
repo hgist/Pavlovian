@@ -11,23 +11,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/ringtone_picker.dart';
 import '../../services/sound_catalog.dart';
 import '../../services/sound_player.dart';
 import '../../theme/app_theme.dart';
 
+/// What the sound picker returns: the display name and an optional
+/// system-ringtone URI (null = bundled sound, just use the name).
+class SoundPick {
+  final String name;
+  final String? uri;
+  const SoundPick({required this.name, this.uri});
+}
+
 class EditSoundSheet extends ConsumerStatefulWidget {
   final String currentSound;
-  const EditSoundSheet({super.key, required this.currentSound});
+  final String? currentSoundUri;
+  const EditSoundSheet({
+    super.key,
+    required this.currentSound,
+    this.currentSoundUri,
+  });
 
-  static Future<String?> show(BuildContext context, String current) {
-    return showModalBottomSheet<String>(
+  static Future<SoundPick?> show(
+    BuildContext context,
+    String currentName, {
+    String? currentUri,
+  }) {
+    return showModalBottomSheet<SoundPick>(
       context: context,
       backgroundColor: AppColors.paper,
       isScrollControlled: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => EditSoundSheet(currentSound: current),
+      builder: (_) => EditSoundSheet(
+        currentSound: currentName,
+        currentSoundUri: currentUri,
+      ),
     );
   }
 
@@ -36,27 +57,43 @@ class EditSoundSheet extends ConsumerStatefulWidget {
 }
 
 class _EditSoundSheetState extends ConsumerState<EditSoundSheet> {
-  late String _selected;
+  late String _selectedName;
+  late String? _selectedUri;
 
   @override
   void initState() {
     super.initState();
-    _selected = widget.currentSound;
+    _selectedName = widget.currentSound;
+    _selectedUri = widget.currentSoundUri;
   }
 
   @override
   void dispose() {
-    // Stop any in-flight preview when the sheet closes.
-    // Using a try because the provider may already be disposing.
     try {
       ref.read(soundPlayerProvider).stop();
     } catch (_) {/* fine */}
     super.dispose();
   }
 
-  void _onTapSound(SoundEntry sound) {
-    setState(() => _selected = sound.name);
+  void _onTapBundled(SoundEntry sound) {
+    setState(() {
+      _selectedName = sound.name;
+      _selectedUri = null;
+    });
     ref.read(soundPlayerProvider).preview(sound.assetPath);
+  }
+
+  Future<void> _openSystemPicker() async {
+    final picker = RingtonePicker();
+    final pickedUri = await picker.pick(currentUri: _selectedUri);
+    if (pickedUri == null) return;
+    final title = await picker.titleFor(pickedUri) ?? 'System sound';
+    if (!mounted) return;
+    setState(() {
+      _selectedName = title;
+      _selectedUri = pickedUri;
+    });
+    // Preview is automatic in the system picker; we don't re-play here.
   }
 
   @override
@@ -90,13 +127,22 @@ class _EditSoundSheetState extends ConsumerState<EditSoundSheet> {
             ),
             const SizedBox(height: 14),
 
-            // Sound list
+            // Bundled sounds
             for (final sound in SoundCatalog.all)
               _SoundRow(
                 sound: sound,
-                selected: sound.name == _selected,
-                onTap: () => _onTapSound(sound),
+                selected: _selectedUri == null && sound.name == _selectedName,
+                onTap: () => _onTapBundled(sound),
               ),
+
+            // System / device ringtone picker entry. When the user has
+            // a system sound currently picked, show its title here so
+            // they can see the live selection.
+            _SystemSoundRow(
+              selected: _selectedUri != null,
+              title: _selectedUri != null ? _selectedName : 'More sounds…',
+              onTap: _openSystemPicker,
+            ),
 
             const SizedBox(height: 14),
 
@@ -115,7 +161,9 @@ class _EditSoundSheetState extends ConsumerState<EditSoundSheet> {
                   child: _SheetButton(
                     label: 'save',
                     primary: true,
-                    onTap: () => Navigator.of(context).pop(_selected),
+                    onTap: () => Navigator.of(context).pop(
+                      SoundPick(name: _selectedName, uri: _selectedUri),
+                    ),
                   ),
                 ),
               ],
@@ -191,6 +239,81 @@ class _SoundRow extends StatelessWidget {
               '▶',
               style: GoogleFonts.caveat(
                 fontSize: 16,
+                color: AppColors.inkMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tappable row that opens the native Android ringtone picker.
+/// Shows "More sounds…" when nothing system-picked, or the picked
+/// title (e.g. "Spaceline") when one is currently selected.
+class _SystemSoundRow extends StatelessWidget {
+  final bool selected;
+  final String title;
+  final VoidCallback onTap;
+  const _SystemSoundRow({
+    required this.selected,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.terracotta.withValues(alpha: 0.18)
+              : AppColors.paperLight,
+          border: Border.all(color: AppColors.ink, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.12),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.terracotta : Colors.transparent,
+                border: Border.all(color: AppColors.ink, width: 1.5),
+                shape: BoxShape.circle,
+              ),
+              child: selected
+                  ? const Center(
+                      child: Icon(Icons.check, size: 10, color: AppColors.ink),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.patrickHand(
+                  fontSize: 16,
+                  color: AppColors.ink,
+                ),
+              ),
+            ),
+            Text(
+              '⋯',
+              style: GoogleFonts.caveat(
+                fontSize: 18,
                 color: AppColors.inkMuted,
               ),
             ),

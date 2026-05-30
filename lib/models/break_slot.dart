@@ -11,6 +11,11 @@
 
 import 'break_time.dart';
 
+/// Sentinel for `copyWith` parameters where we need to distinguish
+/// "not passed" from "passed as null" (because soundUri = null is a
+/// meaningful state — meaning "use the bundled sound").
+const Object _undefined = Object();
+
 class BreakSlot {
   /// Stable identifier (1, 2, 3) — matches the slot number badge in the UI
   /// and is used as the Android notification-channel suffix later.
@@ -26,10 +31,16 @@ class BreakSlot {
   /// in Step 13. Stored as integer minutes; UI enforces 5-min steps.
   final int durationMinutes;
 
-  /// Name of the bundled sound asset to play, e.g. "Chime".
-  /// String-keyed (not an enum) so users can add more sounds without
-  /// touching the model.
+  /// Display name of the sound, e.g. "Chime" or "Spaceline".
+  /// For bundled sounds (Chime/Bell/Ping/Soft) this is also used as
+  /// the Android raw-resource lookup (lowercased). For system-picked
+  /// sounds the actual data is in [soundUri].
   final String soundName;
+
+  /// Optional `content://...` URI when the user picked a system
+  /// ringtone (e.g. Samsung's Spaceline). `null` means the sound is
+  /// one of our bundled assets and [soundName] is used directly.
+  final String? soundUri;
 
   /// Per-slot master switch — disables this slot across the whole week.
   /// Layer 3 of the three-level enable hierarchy.
@@ -41,6 +52,7 @@ class BreakSlot {
     required this.time,
     required this.durationMinutes,
     required this.soundName,
+    this.soundUri,
     this.enabled = true,
   });
 
@@ -52,6 +64,7 @@ class BreakSlot {
     BreakTime? time,
     int? durationMinutes,
     String? soundName,
+    Object? soundUri = _undefined,
     bool? enabled,
   }) {
     return BreakSlot(
@@ -60,6 +73,9 @@ class BreakSlot {
       time: time ?? this.time,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       soundName: soundName ?? this.soundName,
+      soundUri: identical(soundUri, _undefined)
+          ? this.soundUri
+          : soundUri as String?,
       enabled: enabled ?? this.enabled,
     );
   }
@@ -91,6 +107,7 @@ class BreakSlot {
         'time': time.toJson(),
         'durationMinutes': durationMinutes,
         'soundName': soundName,
+        if (soundUri != null) 'soundUri': soundUri,
         'enabled': enabled,
       };
 
@@ -100,6 +117,7 @@ class BreakSlot {
         time: BreakTime.fromJson(json['time'] as Map<String, dynamic>),
         durationMinutes: json['durationMinutes'] as int,
         soundName: json['soundName'] as String,
+        soundUri: json['soundUri'] as String?,
         enabled: json['enabled'] as bool,
       );
 }

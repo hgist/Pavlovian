@@ -30,6 +30,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../models/app_settings.dart';
 import '../models/break_slot.dart';
+import '../models/break_time.dart';
 import '../models/weekday.dart';
 
 class NotificationService {
@@ -79,16 +80,20 @@ class NotificationService {
 
   /// Build the channel ID for a (slot, sound, vibrate, led) combo.
   /// Every behavior that Android freezes at channel-creation time is
-  /// encoded here, so changing any of them produces a NEW channel
-  /// with the new behavior (Android won't mutate an existing channel,
-  /// and even restores deleted-then-recreated channels' old settings).
-  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) =>
-      'pavlovian_s${slot.id}_${slot.soundName.toLowerCase()}'
-      '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}';
+  /// encoded here, so changing any of them produces a NEW channel.
+  /// For system-sound URIs we include a hash so different URIs land
+  /// on different channels.
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) {
+    final soundKey = slot.soundUri != null
+        ? 'u${slot.soundUri!.hashCode.toUnsigned(32).toRadixString(16)}'
+        : slot.soundName.toLowerCase();
+    return 'pavlovian_s${slot.id}_${soundKey}'
+        '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}';
+  }
 
-  /// Create the Android notification channel for this (slot, vibrate,
-  /// led) combo if it doesn't already exist. No delete needed — a
-  /// changed setting yields a different ID.
+  /// Create the channel for this (slot, sound, vibrate, led) combo.
+  /// Picks UriAndroidNotificationSound when the user chose a system
+  /// ringtone, else RawResourceAndroidNotificationSound for bundled.
   Future<void> _ensureChannel(
     BreakSlot slot,
     bool vibrate,
@@ -99,17 +104,18 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin == null) return;
 
+    final AndroidNotificationSound soundSource = slot.soundUri != null
+        ? UriAndroidNotificationSound(slot.soundUri!)
+        : RawResourceAndroidNotificationSound(
+            slot.soundName.toLowerCase(),
+          );
+
     final channel = AndroidNotificationChannel(
       channelIdFor(slot, vibrate, flashLed),
       'Pavlovian — slot ${slot.id}',
       description: 'Break reminder for "${slot.label}"',
       importance: Importance.max,
-      // Default notification audio stream (not alarm stream — that one
-      // is often muted on user devices). category:alarm on the details
-      // still gives the OS the "time-critical" hint.
-      sound: RawResourceAndroidNotificationSound(
-        slot.soundName.toLowerCase(),
-      ),
+      sound: soundSource,
       playSound: true,
       enableVibration: vibrate,
       enableLights: flashLed,
@@ -120,22 +126,38 @@ class NotificationService {
 
   // ── One-off "test" notification (Step 11) ──────────────────────
 
-  /// Fire a notification right now. Notification ID = slot.id so
-  /// repeated taps replace rather than stack.
-  Future<void> fireTest(BreakSlot slot, bool vibrate, bool flashLed) async {
+  /// Fire a notification right now using the user-chosen test sound.
+  /// [soundUri] is `null` for bundled sounds, a content:// URI when
+  /// the user picked a system ringtone. Notification id 0 is reserved
+  /// for the test so it never collides with real slots.
+  Future<void> fireTest(
+    String soundName,
+    bool vibrate,
+    bool flashLed, {
+    String? soundUri,
+  }) async {
     try {
       await initialize();
       final granted = await requestPermission();
       if (!granted) return;
-      await _ensureChannel(slot, vibrate, flashLed);
+      // Synthetic slot used only to drive channel + notification
+      // creation with the chosen sound. id 0 is exclusive to the test.
+      final testSlot = BreakSlot(
+        id: 0,
+        label: 'Test',
+        time: const BreakTime(0, 0),
+        durationMinutes: 0,
+        soundName: soundName,
+        soundUri: soundUri,
+      );
+      await _ensureChannel(testSlot, vibrate, flashLed);
       await _plugin.show(
-        slot.id,
-        // Generic title for the diagnostic — label-as-title only
-        // applies to real break alerts, not the test button.
+        0,
         'Timers Test Alert',
-        'Testing "${slot.label}" — ${slot.time.toDisplay()}, '
-            '${slot.soundName} sound.',
-        _detailsFor(slot, vibrate, flashLed),
+        'Testing alert — $soundName sound'
+            '${vibrate ? ", vibration on" : ""}'
+            '${flashLed ? ", LED on" : ""}.',
+        _detailsFor(testSlot, vibrate, flashLed),
       );
     } catch (e, st) {
       debugPrint('fireTest failed: $e\n$st');
@@ -246,9 +268,12 @@ class NotificationService {
     }
   }
 
-  /// Cancel all schedule-range IDs (100..399). Idempotent.
+  /// Cancel all schedule-range IDs for slots 1..20 across all days.
+  /// The upper bound is generous so dynamically-added slots up to id
+  /// 20 are covered (we allow a lot of headroom for slot growth).
+  /// Idempotent — cancelling a non-existent ID is a no-op.
   Future<void> _cancelAllScheduled() async {
-    for (var slotId = 1; slotId <= 3; slotId++) {
+    for (var slotId = 1; slotId <= 20; slotId++) {
       for (var dayIdx = 0; dayIdx < Weekday.values.length; dayIdx++) {
         await _plugin.cancel(_idFor(slotId, dayIdx));
       }
