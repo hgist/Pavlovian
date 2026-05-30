@@ -141,7 +141,7 @@ class SlotCard extends StatelessWidget {
                   Text(
                     running
                         ? '⏱ $runningRemaining left'
-                        : (slot.enabled ? 'every Sun–Fri' : 'off — whole week'),
+                        : (slot.enabled ? 'every enabled day' : 'off — whole week'),
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       color: running ? AppColors.warning : AppColors.inkMuted,

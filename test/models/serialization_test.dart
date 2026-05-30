@@ -94,10 +94,9 @@ void main() {
     test('decodes per-day map back to Weekday keys', () {
       final json = AppSettings.defaults().toJson();
       final restored = AppSettings.fromJson(json);
-      expect(restored.perDayEnabled[Weekday.mon], true);
-      expect(restored.perDayEnabled[Weekday.thu], true);
-      expect(restored.perDayEnabled[Weekday.fri], true); // now a working day
-      expect(restored.perDayEnabled[Weekday.sat], null); // Sat not in map
+      for (final d in Weekday.values) {
+        expect(restored.perDayEnabled[d], true, reason: '$d in map');
+      }
     });
   });
 }

@@ -130,8 +130,11 @@ class NotificationService {
       await _ensureChannel(slot, vibrate, flashLed);
       await _plugin.show(
         slot.id,
-        slot.label, // title = the alert label (user-defined)
-        'Test alert — ${slot.time.toDisplay()}, ${slot.soundName} sound.',
+        // Generic title for the diagnostic — label-as-title only
+        // applies to real break alerts, not the test button.
+        'Timers Test Alert',
+        'Testing "${slot.label}" — ${slot.time.toDisplay()}, '
+            '${slot.soundName} sound.',
         _detailsFor(slot, vibrate, flashLed),
       );
     } catch (e, st) {
@@ -338,9 +341,11 @@ class NotificationService {
         importance: Importance.max,
         priority: Priority.max,
         icon: '@mipmap/ic_launcher',
-        // Tells Android this is alarm-class — survives DND, less
-        // likely to be suppressed.
-        category: AndroidNotificationCategory.alarm,
+        // `reminder` is more LED-friendly than `alarm` on Samsung:
+        // alarm-class often triggers heads-up popup instead of LED
+        // flash. Reminder still survives Doze and gets delivered,
+        // but is more likely to drive the notification LED.
+        category: AndroidNotificationCategory.reminder,
         playSound: true,
         // Channel governs these on Android 8+, but set them here too
         // for pre-O devices. ledOnMs/ledOffMs are REQUIRED whenever

@@ -424,7 +424,7 @@ class _Legend extends StatelessWidget {
           child: Transform.rotate(
             angle: -0.035,
             child: Text(
-              '↓ each break runs every Sun–Fri',
+              '↓ runs on each enabled day',
               style: GoogleFonts.caveat(
                 fontSize: 14,
                 color: AppColors.warning,

@@ -65,17 +65,10 @@ void main() {
 
   // ── Weekday ──────────────────────────────────────────────────────
   group('Weekday', () {
-    test('Sun–Fri are working days', () {
-      expect(Weekday.sun.isWorking, true);
-      expect(Weekday.mon.isWorking, true);
-      expect(Weekday.tue.isWorking, true);
-      expect(Weekday.wed.isWorking, true);
-      expect(Weekday.thu.isWorking, true);
-      expect(Weekday.fri.isWorking, true);
-    });
-
-    test('Saturday is NOT a working day', () {
-      expect(Weekday.sat.isWorking, false);
+    test('all 7 days are working (Sat now configurable too)', () {
+      for (final d in Weekday.values) {
+        expect(d.isWorking, true, reason: '$d should be working');
+      }
     });
 
     test('fromDateTime maps every weekday correctly', () {
@@ -121,17 +114,11 @@ void main() {
       expect(defaults.slots.every((s) => s.enabled), true);
     });
 
-    test('Sun–Fri master switches all on', () {
-      expect(defaults.isDayEnabled(Weekday.sun), true);
-      expect(defaults.isDayEnabled(Weekday.mon), true);
-      expect(defaults.isDayEnabled(Weekday.tue), true);
-      expect(defaults.isDayEnabled(Weekday.wed), true);
-      expect(defaults.isDayEnabled(Weekday.thu), true);
-      expect(defaults.isDayEnabled(Weekday.fri), true);
-    });
-
-    test('Saturday is always off, regardless of map contents', () {
-      expect(defaults.isDayEnabled(Weekday.sat), false);
+    test('all 7 days enabled by default', () {
+      for (final d in Weekday.values) {
+        expect(defaults.isDayEnabled(d), true,
+            reason: '$d should default to on');
+      }
     });
 
     test('globalEnabled on, vibrate on, flashLed off', () {
@@ -172,9 +159,10 @@ void main() {
       }
     });
 
-    test('Friday now fires (working day); Saturday never fires', () {
-      expect(settings.willFire(Weekday.fri, slot), true);
-      expect(settings.willFire(Weekday.sat, slot), false);
+    test('all 7 days fire when all three layers ON', () {
+      for (final d in Weekday.values) {
+        expect(settings.willFire(d, slot), true, reason: '$d should fire');
+      }
     });
   });
 

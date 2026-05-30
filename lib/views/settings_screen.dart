@@ -33,6 +33,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/app_settings.dart';
 import '../models/break_slot.dart';
 import '../models/break_time.dart';
+import '../models/weekday.dart';
 import '../services/app_version.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
@@ -470,35 +471,43 @@ class _WorkingDaysCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Timers fire on checked days only. Sat is always off.',
-            style: GoogleFonts.patrickHand(
-              fontSize: 12,
-              color: AppColors.inkMuted,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+      child: Consumer(
+        builder: (context, ref, _) {
+          final notifier = ref.read(settingsProvider.notifier);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final label in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'])
-                _SettingsDayPill(label: label, struck: false),
-              _SettingsDayPill(label: 'Sat', struck: true),
+              Text(
+                'Timers fire on checked days only.',
+                style: GoogleFonts.patrickHand(
+                  fontSize: 12,
+                  color: AppColors.inkMuted,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final day in Weekday.values)
+                    _SettingsDayPill(
+                      label: day.label,
+                      enabled: settings.isDayEnabled(day),
+                      onTap: () => notifier.toggleDay(day),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'tap a day to toggle it on / off',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  color: AppColors.inkMuted,
+                ),
+              ),
             ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'tap a day to toggle it on / off',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 11,
-              color: AppColors.inkMuted,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -506,30 +515,42 @@ class _WorkingDaysCard extends StatelessWidget {
 
 class _SettingsDayPill extends StatelessWidget {
   final String label;
-  final bool struck;
-  const _SettingsDayPill({required this.label, required this.struck});
+  final bool enabled;
+  final VoidCallback? onTap;
+  const _SettingsDayPill({
+    required this.label,
+    required this.enabled,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.ink, width: 2),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: struck
-            ? GoogleFonts.jetBrainsMono(
-                fontSize: 12,
-                color: AppColors.inkHairline,
-                decoration: TextDecoration.lineThrough,
-                decorationColor: AppColors.inkHairline,
-              )
-            : GoogleFonts.patrickHand(
-                fontSize: 13,
-                color: AppColors.ink,
-              ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: enabled
+              ? AppColors.terracotta.withValues(alpha: 0.15)
+              : Colors.transparent,
+          border: Border.all(color: AppColors.ink, width: 2),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: enabled
+              ? GoogleFonts.patrickHand(
+                  fontSize: 13,
+                  color: AppColors.ink,
+                )
+              : GoogleFonts.jetBrainsMono(
+                  fontSize: 12,
+                  color: AppColors.inkHairline,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: AppColors.inkHairline,
+                ),
+        ),
       ),
     );
   }

@@ -99,26 +99,17 @@ void main() {
       expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.tue), true);
     });
 
-    test('toggleDay works for Friday (now a working day)', () async {
+    test('toggleDay works for every day including Sat', () async {
       final c = makeContainer();
       final n = c.read(settingsProvider.notifier);
       await c.read(settingsProvider.future);
 
-      expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.fri), true);
-      await n.toggleDay(Weekday.fri);
-      expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.fri), false);
-    });
-
-    test('toggleDay is a no-op for Saturday', () async {
-      final c = makeContainer();
-      final n = c.read(settingsProvider.notifier);
-      final before = await c.read(settingsProvider.future);
-
-      await n.toggleDay(Weekday.sat);
-
-      expect(c.read(settingsProvider).value!.perDayEnabled,
-          equals(before.perDayEnabled));
-      expect(c.read(settingsProvider).value!.isDayEnabled(Weekday.sat), false);
+      for (final day in Weekday.values) {
+        expect(c.read(settingsProvider).value!.isDayEnabled(day), true);
+        await n.toggleDay(day);
+        expect(c.read(settingsProvider).value!.isDayEnabled(day), false);
+        await n.toggleDay(day); // flip back so the next iteration is clean
+      }
     });
 
     test('toggleSlot flips a single slot enable, leaves others', () async {

@@ -27,7 +27,9 @@ class DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fri & Sat — non-working, struck through, non-tappable.
+    // Non-working day → struck-through, non-tappable. With
+    // `isWorking` currently returning true for all 7 days this
+    // branch is dormant — kept as a defensive fallback.
     if (!day.isWorking) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),

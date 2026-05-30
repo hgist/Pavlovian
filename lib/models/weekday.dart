@@ -1,8 +1,9 @@
 // Enum for days of the week.
 //
-// Includes all 7 days so the UI can show Sat as crossed-out,
-// but `isWorking` returns true for Sun–Fri (the work week for
-// this app). Only Saturday is non-working.
+// All 7 days are now "working" — each can be independently
+// toggled on/off via the day-master checkbox. `isWorking` is
+// kept as a hook for any future hard-exclusion logic but
+// currently returns true for every day.
 //
 // Dart enums can have fields, constructors, and methods — unlike
 // Java enums where this is unusual, in Dart it's idiomatic and common.
@@ -20,8 +21,9 @@ enum Weekday {
   final String fullName;  // "Sunday"
   const Weekday({required this.label, required this.fullName});
 
-  /// True for Sun–Fri. Only Saturday is a non-working day.
-  bool get isWorking => index <= Weekday.fri.index;
+  /// All 7 days are configurable. Kept as a hook for future
+  /// per-day hard-exclusion rules; always true for now.
+  bool get isWorking => true;
 
   /// Convert a Dart DateTime's weekday (Mon=1, Sun=7) into our enum.
   /// Used in Step 12 to know what day it is when scheduling alarms.
