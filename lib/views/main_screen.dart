@@ -91,12 +91,18 @@ class _LoadedScreen extends ConsumerStatefulWidget {
   ConsumerState<_LoadedScreen> createState() => _LoadedScreenState();
 }
 
-class _LoadedScreenState extends ConsumerState<_LoadedScreen> {
+class _LoadedScreenState extends ConsumerState<_LoadedScreen>
+    with WidgetsBindingObserver {
   Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
+    // Observe app lifecycle so we can pick up countdowns started from
+    // a notification's "▶ Start countdown" action while the app was
+    // backgrounded / killed.
+    WidgetsBinding.instance.addObserver(this);
+
     // Tick once a second to refresh the MM:SS countdown labels and
     // drop any countdown that has reached zero.
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -109,7 +115,19 @@ class _LoadedScreenState extends ConsumerState<_LoadedScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    // When the user comes back to the app (e.g. from tapping a
+    // notification's action), re-read countdowns from disk so the
+    // running MM:SS shows up immediately.
+    if (s == AppLifecycleState.resumed) {
+      // ignore: discarded_futures
+      ref.read(countdownProvider.notifier).refreshFromDisk();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     super.dispose();
   }

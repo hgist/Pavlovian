@@ -16,6 +16,14 @@ import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 import 'views/splash_screen.dart';
 
+/// Root navigator key — let non-widget code (e.g. the foreground
+/// notification tap handler in `notification_service.dart`) reach the
+/// app's navigator to pop back to the Main screen when the user taps
+/// a break notification while the app was sitting on Settings or
+/// Diagnostics.
+final GlobalKey<NavigatorState> rootNavigatorKey =
+    GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   // Required before any async plugin use (SharedPreferences,
   // PackageInfo, notifications, etc.) when running before runApp().
@@ -54,6 +62,7 @@ class PavlovianApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Pavlovian',
+      navigatorKey: rootNavigatorKey,
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: SplashGate(minDuration: splashDuration),

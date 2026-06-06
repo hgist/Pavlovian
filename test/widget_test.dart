@@ -28,8 +28,15 @@ class _StubNotificationService implements NotificationService {
   @override
   Future<void> scheduleAll(AppSettings settings) async {}
   @override
-  Future<void> scheduleBreakEnd(BreakSlot slot, Weekday day,
-      DateTime endTime, bool vibrate, bool flashLed) async {}
+  Future<void> scheduleBreakEnd(
+    BreakSlot slot,
+    Weekday day,
+    DateTime endTime,
+    bool vibrate,
+    bool flashLed, {
+    required String endSoundName,
+    String? endSoundUri,
+  }) async {}
   @override
   Future<void> cancelBreakEnd(int slotId, Weekday day) async {}
   @override

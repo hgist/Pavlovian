@@ -1,5 +1,7 @@
 // Modal bottom sheet with a wheel picker for choosing a break
-// duration in 5-minute increments (5 .. 120 min).
+// duration. Step is driven by [kTimeGranularityMin] in app_settings.dart
+// so flipping that constant changes ALL minute pickers + rounding rules
+// at once (1 = testing precision, 5 = production).
 //
 // Usage:
 //   final newMin = await EditDurationSheet.show(context, slot.durationMinutes);
@@ -9,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../models/app_settings.dart';
 import '../../theme/app_theme.dart';
 
 class EditDurationSheet extends StatefulWidget {
@@ -35,8 +38,10 @@ class EditDurationSheet extends StatefulWidget {
 }
 
 class _EditDurationSheetState extends State<EditDurationSheet> {
-  // Picker values: 5, 10, 15, ..., 120 minutes.
-  static const int _stepMin = 5;
+  // Picker values: step, 2*step, …, _maxMin. Step comes from the global
+  // granularity constant — `kTimeGranularityMin = 1` shows every minute,
+  // `5` shows the production 5-min ticks.
+  int get _stepMin => kTimeGranularityMin;
   static const int _maxMin = 120;
 
   late int _selectedMin;

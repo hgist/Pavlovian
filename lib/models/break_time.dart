@@ -33,19 +33,29 @@ class BreakTime implements Comparable<BreakTime> {
   int get totalMinutes => hour * 60 + minute;
 
   /// Returns a new BreakTime with the minute rounded to the nearest
-  /// multiple of 5. Wraps over midnight if the rounding crosses 23:58.
+  /// multiple of [step]. Wraps over midnight if the rounding crosses
+  /// the last allowed step before 24:00.
   ///
+  /// Examples with step=5:
   ///   02:23 -> 02:25   (round up)
   ///   02:27 -> 02:25   (round down)
-  ///   02:28 -> 02:30
   ///   23:58 -> 00:00   (wraps)
-  BreakTime roundedToNearest5() {
-    final rounded = ((minute + 2) ~/ 5) * 5;
-    if (rounded == 60) {
-      return BreakTime((hour + 1) % 24, 0);
+  /// With step=1 the value is unchanged (every minute is already
+  /// "on a step boundary").
+  BreakTime roundedToNearest(int step) {
+    if (step <= 1) return this;
+    final rounded = ((minute + step ~/ 2) ~/ step) * step;
+    if (rounded >= 60) {
+      return BreakTime((hour + 1) % 24, rounded - 60);
     }
     return BreakTime(hour, rounded);
   }
+
+  /// Back-compat alias for the old 5-min-step helper. Now driven by
+  /// the global [kTimeGranularityMin] constant in app_settings.dart
+  /// so flipping the constant changes behaviour everywhere at once.
+  /// Kept as a method so tests written against the old name still pass.
+  BreakTime roundedToNearest5() => roundedToNearest(5);
 
   @override
   int compareTo(BreakTime other) => totalMinutes - other.totalMinutes;

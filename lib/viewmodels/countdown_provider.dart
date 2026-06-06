@@ -42,6 +42,24 @@ class CountdownNotifier extends Notifier<Map<String, DateTime>> {
     if (active.isNotEmpty) state = active;
   }
 
+  /// Re-read countdowns from disk and MERGE with whatever's in memory.
+  /// Used when the app comes back to foreground — the notification's
+  /// "▶ Start countdown" action might have written a new countdown to
+  /// SharedPreferences from a background isolate, and we want the UI
+  /// to reflect that without waiting for an app restart.
+  Future<void> refreshFromDisk() async {
+    final loaded = await ref.read(settingsRepositoryProvider).loadCountdowns();
+    final now = DateTime.now();
+    final merged = <String, DateTime>{...state};
+    loaded.forEach((key, end) {
+      if (end.isAfter(now)) merged[key] = end;
+    });
+    if (merged.length != state.length ||
+        merged.entries.any((e) => state[e.key] != e.value)) {
+      state = merged;
+    }
+  }
+
   /// Begin a countdown for [slot] on [day]: end = now + duration.
   Future<void> start(BreakSlot slot, Weekday day) async {
     final end = DateTime.now().add(Duration(minutes: slot.durationMinutes));
@@ -51,9 +69,19 @@ class CountdownNotifier extends Notifier<Map<String, DateTime>> {
     final settings = ref.read(settingsProvider).value;
     final vibrate = settings?.vibrate ?? true;
     final flashLed = settings?.flashLed ?? false;
-    await ref
-        .read(notificationServiceProvider)
-        .scheduleBreakEnd(slot, day, end, vibrate, flashLed);
+    // Use the dedicated end-of-break sound so the user can tell
+    // "break time" apart from "break over" by ear.
+    final endName = settings?.endSoundName ?? 'Soft';
+    final endUri = settings?.endSoundUri;
+    await ref.read(notificationServiceProvider).scheduleBreakEnd(
+          slot,
+          day,
+          end,
+          vibrate,
+          flashLed,
+          endSoundName: endName,
+          endSoundUri: endUri,
+        );
     await _persist();
   }
 

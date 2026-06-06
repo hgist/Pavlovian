@@ -49,3 +49,8 @@ app.*.map.json
 
 # Release APKs (distributed via GitHub Releases, not git)
 *.apk
+
+# Signing keystore and password file — NEVER commit these.
+android/key.properties
+*.jks
+*.keystore

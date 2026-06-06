@@ -12,6 +12,15 @@ import 'weekday.dart';
 /// on "Reset All to Defaults".
 const String kDefaultSoundName = 'Chime';
 
+/// Default end-of-break sound — intentionally different from the slot
+/// default so users distinguish "break time" vs "break over" by ear.
+const String kDefaultEndSoundName = 'Soft';
+
+/// Minute step for slot times and durations. 1 = single-minute precision
+/// (useful for testing — quick "fire in 1 min" verification). Raise back
+/// to 5 for production once the app graduates from testing.
+const int kTimeGranularityMin = 1;
+
 /// Internal sentinel for nullable copyWith parameters (so callers can
 /// distinguish "not passed" from "passed as null").
 const Object _undefinedSettings = Object();
@@ -41,6 +50,16 @@ class AppSettings {
   /// resource name then.
   final String? testSoundUri;
 
+  /// Display name of the sound used by the END-OF-BREAK notification
+  /// (fired when a countdown started via "▶ start" on a slot card
+  /// reaches zero). Kept separate from each slot's [BreakSlot.soundName]
+  /// so the "break over" tone can differ from the "break time" tone.
+  final String endSoundName;
+
+  /// Optional system-ringtone URI for the end-of-break sound. `null`
+  /// means use the bundled resource named by [endSoundName].
+  final String? endSoundUri;
+
   const AppSettings({
     required this.globalEnabled,
     required this.perDayEnabled,
@@ -49,6 +68,8 @@ class AppSettings {
     required this.flashLed,
     required this.testSoundName,
     this.testSoundUri,
+    required this.endSoundName,
+    this.endSoundUri,
   });
 
   /// Factory defaults.
@@ -96,6 +117,7 @@ class AppSettings {
       vibrate: true,
       flashLed: false,
       testSoundName: soundName,
+      endSoundName: kDefaultEndSoundName,
     );
   }
 
@@ -107,6 +129,8 @@ class AppSettings {
     bool? flashLed,
     String? testSoundName,
     Object? testSoundUri = _undefinedSettings,
+    String? endSoundName,
+    Object? endSoundUri = _undefinedSettings,
   }) {
     return AppSettings(
       globalEnabled: globalEnabled ?? this.globalEnabled,
@@ -118,6 +142,10 @@ class AppSettings {
       testSoundUri: identical(testSoundUri, _undefinedSettings)
           ? this.testSoundUri
           : testSoundUri as String?,
+      endSoundName: endSoundName ?? this.endSoundName,
+      endSoundUri: identical(endSoundUri, _undefinedSettings)
+          ? this.endSoundUri
+          : endSoundUri as String?,
     );
   }
 
@@ -164,6 +192,8 @@ class AppSettings {
         'flashLed': flashLed,
         'testSoundName': testSoundName,
         if (testSoundUri != null) 'testSoundUri': testSoundUri,
+        'endSoundName': endSoundName,
+        if (endSoundUri != null) 'endSoundUri': endSoundUri,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -185,6 +215,9 @@ class AppSettings {
       // Fallback for older installs whose JSON predates testSoundName.
       testSoundName: json['testSoundName'] as String? ?? kDefaultSoundName,
       testSoundUri: json['testSoundUri'] as String?,
+      // Fallback for older installs whose JSON predates endSoundName.
+      endSoundName: json['endSoundName'] as String? ?? kDefaultEndSoundName,
+      endSoundUri: json['endSoundUri'] as String?,
     );
   }
 }

@@ -86,27 +86,28 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   // ── Per-slot field updaters (Step 9) ───────────────────────────────
   // Each method finds the slot by id, applies copyWith for the one
   // field, and persists via _update(). Rounding/clamping is done HERE
-  // so the UI picker doesn't have to enforce the spec's 5-min rule.
+  // so the UI picker doesn't have to enforce the granularity rule.
 
   /// Set a slot's time of day. The minute is snapped to the nearest
-  /// multiple of 5 — enforcing the spec's 5-min granularity even if
-  /// the UI picker allowed any value.
+  /// multiple of [kTimeGranularityMin] (1 during testing, 5 in prod).
   Future<void> setSlotTime(int slotId, BreakTime newTime) async {
     final current = _current;
     if (current == null) return;
     final slot = current.slots.firstWhere((s) => s.id == slotId);
     await _update(current.withUpdatedSlot(
-      slot.copyWith(time: newTime.roundedToNearest5()),
+      slot.copyWith(time: newTime.roundedToNearest(kTimeGranularityMin)),
     ));
   }
 
-  /// Set a slot's duration. Clamped to [5, 240] minutes and rounded
-  /// to the nearest multiple of 5.
+  /// Set a slot's duration. Clamped to [granularity, 240] minutes and
+  /// rounded to the nearest multiple of [kTimeGranularityMin] — so
+  /// `kTimeGranularityMin = 1` lets you set 1-min durations for testing.
   Future<void> setSlotDuration(int slotId, int newMinutes) async {
     final current = _current;
     if (current == null) return;
-    final clamped = newMinutes.clamp(5, 240);
-    final rounded = ((clamped + 2) ~/ 5) * 5;
+    final step = kTimeGranularityMin;
+    final clamped = newMinutes.clamp(step, 240);
+    final rounded = ((clamped + step ~/ 2) ~/ step) * step;
     final slot = current.slots.firstWhere((s) => s.id == slotId);
     await _update(current.withUpdatedSlot(
       slot.copyWith(durationMinutes: rounded),
@@ -165,6 +166,21 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(current.copyWith(
       testSoundName: newSoundName,
       testSoundUri: newSoundUri,
+    ));
+  }
+
+  /// Pick the sound that plays when a slot's break-duration countdown
+  /// (started via ▶ on a slot card) reaches zero. Independent of each
+  /// slot's start-of-break sound so users can hear "break over" by ear.
+  Future<void> setEndSound(
+    String newSoundName, {
+    String? newSoundUri,
+  }) async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(
+      endSoundName: newSoundName,
+      endSoundUri: newSoundUri,
     ));
   }
 

@@ -28,11 +28,99 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../main.dart' show rootNavigatorKey;
 import '../models/app_settings.dart';
 import '../models/break_slot.dart';
 import '../models/break_time.dart';
 import '../models/weekday.dart';
 import 'log_service.dart';
+import 'settings_repository.dart';
+
+/// Action id for the "▶ Start countdown" button on break notifications.
+/// Centralised here so the handler and the scheduler agree.
+const String kStartCountdownActionId = 'start_countdown';
+
+/// Background isolate entry point for tapped notification actions when
+/// the app is killed or backgrounded. Annotated with `@pragma` so the
+/// AOT compiler keeps it — without that, it would be tree-shaken in
+/// release builds and Android would have no callback to invoke.
+@pragma('vm:entry-point')
+void onBackgroundNotificationResponse(NotificationResponse r) {
+  // ignore: discarded_futures
+  _handleNotificationResponse(r);
+}
+
+/// Foreground tap handler — runs in the app's main isolate. We share
+/// the action-button logic with the background handler, and ALSO pop
+/// the navigator stack back to root when the user taps the notification
+/// body, so they always land on the Main screen (which has the per-slot
+/// ▶ Start buttons) regardless of which screen was last visible.
+@pragma('vm:entry-point')
+void onForegroundNotificationResponse(NotificationResponse r) {
+  // ignore: discarded_futures
+  _handleNotificationResponse(r);
+  // Body tap (no actionId) → pop everything above MainScreen so the
+  // user doesn't land on Settings / Diagnostics by accident.
+  if (r.actionId == null) {
+    final nav = rootNavigatorKey.currentState;
+    if (nav != null && nav.canPop()) {
+      nav.popUntil((route) => route.isFirst);
+    }
+  }
+}
+
+/// Heart of the "Start countdown from notification" flow.
+///
+/// Runs in either the main isolate (foreground tap) or a fresh
+/// background isolate (locked-screen tap with app killed), so it CAN'T
+/// rely on Riverpod / app-wide singletons. Everything it needs is
+/// read fresh from SharedPreferences.
+///
+/// Steps:
+///   1. Parse the payload `start:slotId:dayIndex`.
+///   2. Load AppSettings to find the slot + read user prefs.
+///   3. Persist the new countdown (end = now + slot.durationMinutes).
+///   4. Schedule the matching end-of-break notification via a freshly-
+///      initialised plugin instance — channels persist across isolates,
+///      but the FlutterLocalNotificationsPlugin object does not.
+Future<void> _handleNotificationResponse(NotificationResponse r) async {
+  if (r.actionId != kStartCountdownActionId) return;
+  final payload = r.payload;
+  if (payload == null) return;
+  final parts = payload.split(':');
+  if (parts.length != 3 || parts[0] != 'start') return;
+  final slotId = int.tryParse(parts[1]);
+  final dayIdx = int.tryParse(parts[2]);
+  if (slotId == null || dayIdx == null) return;
+  if (dayIdx < 0 || dayIdx >= Weekday.values.length) return;
+
+  final repo = SettingsRepository();
+  final settings = await repo.load();
+  final slot = settings.slots.where((s) => s.id == slotId).firstOrNull;
+  if (slot == null) return;
+  final day = Weekday.values[dayIdx];
+
+  // Persist the new countdown so the main screen shows it when re-opened.
+  final end = DateTime.now().add(Duration(minutes: slot.durationMinutes));
+  final countdowns = await repo.loadCountdowns();
+  countdowns['${slotId}_$dayIdx'] = end;
+  await repo.saveCountdowns(countdowns);
+
+  // Schedule the end-of-break notification. Re-initialise the plugin
+  // because we may be in a fresh isolate where the singleton state is
+  // empty.
+  final svc = NotificationService();
+  await svc.initialize();
+  await svc.scheduleBreakEnd(
+    slot,
+    day,
+    end,
+    settings.vibrate,
+    settings.flashLed,
+    endSoundName: settings.endSoundName,
+    endSoundUri: settings.endSoundUri,
+  );
+}
 
 class NotificationService {
   /// Optional logger. Wired up by the Riverpod provider so we don't
@@ -66,7 +154,12 @@ class NotificationService {
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     );
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: onForegroundNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          onBackgroundNotificationResponse,
+    );
     _initialized = true;
     _l('init: plugin OK');
   }
@@ -290,32 +383,54 @@ class NotificationService {
 
   /// Schedule a one-shot "break over" notification at [endTime] for a
   /// specific (slot, day).
+  ///
+  /// [endSoundName] / [endSoundUri] override the sound. We build a
+  /// SYNTHETIC slot with these so the channel id picks up the end-
+  /// sound — channels are immutable once created, so different sounds
+  /// must live on different channel IDs.
   Future<void> scheduleBreakEnd(
     BreakSlot slot,
     Weekday day,
     DateTime endTime,
     bool vibrate,
-    bool flashLed,
-  ) async {
+    bool flashLed, {
+    required String endSoundName,
+    String? endSoundUri,
+  }) async {
     try {
       await initialize();
-      await _ensureChannel(slot, vibrate, flashLed);
+      // Synthetic "end-of-break" slot — same id/label so notification
+      // metadata still reads like the original break, but with the
+      // end-sound substituted. Negative slot id keeps end-of-break
+      // channels in their own namespace (no collision with start-of-
+      // break channels for slots 1..20).
+      final endSlot = BreakSlot(
+        id: -slot.id, // negative → end-of-break channel namespace
+        label: slot.label,
+        time: slot.time,
+        durationMinutes: slot.durationMinutes,
+        soundName: endSoundName,
+        soundUri: endSoundUri,
+      );
+      await _ensureChannel(endSlot, vibrate, flashLed);
       final when = tz.TZDateTime.from(endTime, tz.local);
       await _plugin.zonedSchedule(
         _breakEndId(slot.id, day),
-        slot.label, // title = the alert label (user-defined)
+        slot.label,
         'Break over — your ${slot.durationMinutes}-minute break has '
             'ended. Time to head back.',
         when,
-        _detailsFor(slot, vibrate, flashLed),
+        _detailsFor(endSlot, vibrate, flashLed),
         androidScheduleMode: AndroidScheduleMode.alarmClock,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         // No matchDateTimeComponents → fires once, not recurring.
       );
-      debugPrint('scheduleBreakEnd: slot ${slot.id}/${day.label} ends $when');
+      _l('scheduleBreakEnd: slot ${slot.id}/${day.label} '
+          '@ $when · sound=$endSoundName');
     } catch (e, st) {
-      debugPrint('scheduleBreakEnd FAILED: $e\n$st');
+      _l('scheduleBreakEnd FAILED: $e');
+      debugPrint('$st');
     }
   }
 
@@ -356,13 +471,30 @@ class NotificationService {
       slot.time.minute,
     );
 
+    // Tappable "▶ Start countdown" button on the notification.
+    // The payload encodes (slot, day) so the action handler can
+    // start the right countdown even when the app has been killed.
+    final actions = <AndroidNotificationAction>[
+      const AndroidNotificationAction(
+        kStartCountdownActionId,
+        '▶ Start countdown',
+        // Dismiss the notification when tapped — there's no point
+        // keeping it around once the duration timer is running.
+        cancelNotification: true,
+        // We don't pop a UI from the action — the countdown runs
+        // headlessly. `showsUserInterface = false` keeps Android
+        // from briefly bringing our activity to the foreground.
+        showsUserInterface: false,
+      ),
+    ];
+
     await _plugin.zonedSchedule(
       id,
       slot.label, // title = the alert label (user-defined)
       "Break time — it's ${slot.time.toDisplay()}. "
           'Enjoy your ${slot.durationMinutes} minutes.',
       firstFire,
-      _detailsFor(slot, vibrate, flashLed),
+      _detailsFor(slot, vibrate, flashLed, actions: actions),
       // alarmClock = setAlarmClock() under the hood. Same priority
       // as the built-in clock app's alarms — bypasses Doze, battery
       // optimization, Samsung's "sleeping apps" list, and the
@@ -376,6 +508,9 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
       // Repeat weekly at the same weekday + hh:mm.
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      // Payload format: `start:<slotId>:<dayIndex>` — parsed by the
+      // top-level `_handleNotificationResponse` handler.
+      payload: 'start:${slot.id}:${day.index}',
     );
     _l('  scheduled id=$id "${slot.label}" @ $firstFire');
   }
@@ -417,8 +552,9 @@ class NotificationService {
   NotificationDetails _detailsFor(
     BreakSlot slot,
     bool vibrate,
-    bool flashLed,
-  ) {
+    bool flashLed, {
+    List<AndroidNotificationAction>? actions,
+  }) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
         channelIdFor(slot, vibrate, flashLed),
@@ -441,6 +577,7 @@ class NotificationService {
         ledColor: flashLed ? const Color(0xFFE8A07A) : null,
         ledOnMs: flashLed ? 1000 : null,
         ledOffMs: flashLed ? 500 : null,
+        actions: actions,
       ),
     );
   }

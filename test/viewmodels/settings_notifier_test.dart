@@ -38,8 +38,15 @@ class _StubNotificationService implements NotificationService {
   Future<void> scheduleAll(AppSettings settings) async {}
 
   @override
-  Future<void> scheduleBreakEnd(BreakSlot slot, Weekday day,
-      DateTime endTime, bool vibrate, bool flashLed) async {}
+  Future<void> scheduleBreakEnd(
+    BreakSlot slot,
+    Weekday day,
+    DateTime endTime,
+    bool vibrate,
+    bool flashLed, {
+    required String endSoundName,
+    String? endSoundUri,
+  }) async {}
 
   @override
   Future<void> cancelBreakEnd(int slotId, Weekday day) async {}
@@ -172,36 +179,36 @@ void main() {
 
   // ── Step 9: per-slot field updaters ──────────────────────────────
   group('SettingsNotifier setSlot*', () {
-    test('setSlotTime updates time and snaps to nearest 5 min', () async {
+    test('setSlotTime stores the value at current granularity', () async {
+      // Asserts behaviour at kTimeGranularityMin = 1 (testing mode).
+      // For step=5, see BreakTime.roundedToNearest(5) tests directly.
       final c = makeContainer();
       final n = c.read(settingsProvider.notifier);
       await c.read(settingsProvider.future);
 
-      // 11:23 → snapped to 11:25
       await n.setSlotTime(1, const BreakTime(11, 23));
       expect(c.read(settingsProvider).value!.slots[0].time,
-          const BreakTime(11, 25));
+          const BreakTime(11, 23));
 
-      // 09:02 → 09:00 (round down)
       await n.setSlotTime(1, const BreakTime(9, 2));
       expect(c.read(settingsProvider).value!.slots[0].time,
-          const BreakTime(9, 0));
+          const BreakTime(9, 2));
     });
 
-    test('setSlotDuration clamps and rounds to 5-min steps', () async {
+    test('setSlotDuration clamps to the legal range', () async {
+      // Asserts behaviour at kTimeGranularityMin = 1.
       final c = makeContainer();
       final n = c.read(settingsProvider.notifier);
       await c.read(settingsProvider.future);
 
-      // 27 -> 25
       await n.setSlotDuration(1, 27);
-      expect(c.read(settingsProvider).value!.slots[0].durationMinutes, 25);
+      expect(c.read(settingsProvider).value!.slots[0].durationMinutes, 27);
 
-      // 0 -> 5 (clamped)
+      // 0 → clamped to minimum (1 min when granularity=1)
       await n.setSlotDuration(1, 0);
-      expect(c.read(settingsProvider).value!.slots[0].durationMinutes, 5);
+      expect(c.read(settingsProvider).value!.slots[0].durationMinutes, 1);
 
-      // 1000 -> 240 (clamped)
+      // 1000 → clamped to 240
       await n.setSlotDuration(1, 1000);
       expect(c.read(settingsProvider).value!.slots[0].durationMinutes, 240);
     });

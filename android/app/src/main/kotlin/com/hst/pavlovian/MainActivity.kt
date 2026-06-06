@@ -1,4 +1,4 @@
-package com.hst.pavlovian.pavlovian
+package com.hst.pavlovian
 
 import android.app.Activity
 import android.content.Intent

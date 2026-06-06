@@ -679,6 +679,24 @@ class _NotificationsCard extends StatelessWidget {
                   }
                 },
               ),
+              _SettingRow(
+                label: 'End-of-break sound',
+                value: settings.endSoundName,
+                accent: true,
+                onTap: () async {
+                  final picked = await EditSoundSheet.show(
+                    context,
+                    settings.endSoundName,
+                    currentUri: settings.endSoundUri,
+                  );
+                  if (picked != null) {
+                    await notifier.setEndSound(
+                      picked.name,
+                      newSoundUri: picked.uri,
+                    );
+                  }
+                },
+              ),
               _ToggleRow(
                 label: 'Vibrate on alert',
                 on: settings.vibrate,
