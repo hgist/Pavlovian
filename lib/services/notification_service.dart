@@ -32,28 +32,35 @@ import '../models/app_settings.dart';
 import '../models/break_slot.dart';
 import '../models/break_time.dart';
 import '../models/weekday.dart';
+import 'log_service.dart';
 
 class NotificationService {
+  /// Optional logger. Wired up by the Riverpod provider so we don't
+  /// create a Riverpod ref dependency inside this plain class.
+  LogService? log;
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+
+  void _l(String s) {
+    log?.log(s);
+    debugPrint(s);
+  }
 
   /// Initialize the plugin AND the timezone database. Safe to call
   /// multiple times — first call does the work, the rest are no-ops.
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Load tzdata so tz.local resolves to a real Location.
     tz_data.initializeTimeZones();
     try {
       final tzName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(tzName));
-      debugPrint('NotificationService: tz = $tzName');
+      _l('init: tz=$tzName');
     } catch (e) {
-      // No platform timezone available (e.g., tests) — fall back
-      // to UTC. Scheduling will still work, just in UTC offsets.
-      debugPrint('NotificationService: tz lookup FAILED → UTC fallback ($e)');
+      _l('init: tz LOOKUP FAILED → UTC ($e)');
     }
 
     const initSettings = InitializationSettings(
@@ -61,7 +68,40 @@ class NotificationService {
     );
     await _plugin.initialize(initSettings);
     _initialized = true;
-    debugPrint('NotificationService: initialized');
+    _l('init: plugin OK');
+  }
+
+  /// Diagnostic: does the OS currently allow exact alarms? Returns
+  /// true on older Android (pre-API 31) where this is always allowed.
+  Future<bool> canScheduleExactAlarms() async {
+    try {
+      final p = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (p == null) return true;
+      final ok = await p.canScheduleExactNotifications();
+      return ok ?? true;
+    } catch (e) {
+      _l('canScheduleExactAlarms ERROR: $e');
+      return true;
+    }
+  }
+
+  /// Diagnostic: ask the OS to grant exact-alarm permission. Opens the
+  /// system Settings page when not yet granted (Android 12+).
+  Future<bool> requestExactAlarmPermission() async {
+    try {
+      final p = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (p == null) return true;
+      final ok = await p.requestExactAlarmsPermission();
+      _l('requestExactAlarmPermission → $ok');
+      return ok ?? true;
+    } catch (e) {
+      _l('requestExactAlarmPermission ERROR: $e');
+      return true;
+    }
   }
 
   /// Ask the OS for POST_NOTIFICATIONS permission (Android 13+).
@@ -87,8 +127,13 @@ class NotificationService {
     final soundKey = slot.soundUri != null
         ? 'u${slot.soundUri!.hashCode.toUnsigned(32).toRadixString(16)}'
         : slot.soundName.toLowerCase();
+    // `r2` suffix forces NEW channels in v1.5.14+. v1.5.13 release built
+    // channels that quietly fell back to Samsung's "Spaceline" because
+    // R8 had stripped our chime/bell/.wav raw resources. Android refuses
+    // to change a channel's sound after creation, so the only way out is
+    // a brand-new channel ID — hence the rev bump here.
     return 'pavlovian_s${slot.id}_${soundKey}'
-        '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}';
+        '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}_r2';
   }
 
   /// Create the channel for this (slot, sound, vibrate, led) combo.
@@ -159,8 +204,10 @@ class NotificationService {
             '${flashLed ? ", LED on" : ""}.',
         _detailsFor(testSlot, vibrate, flashLed),
       );
+      _l('fireTest OK · sound=$soundName uri=${soundUri ?? "(none)"}');
     } catch (e, st) {
-      debugPrint('fireTest failed: $e\n$st');
+      _l('fireTest FAILED: $e');
+      debugPrint('$st');
     }
   }
 
@@ -177,33 +224,47 @@ class NotificationService {
   Future<void> scheduleAll(AppSettings settings) async {
     try {
       await initialize();
+      _l('scheduleAll START · globalEnabled=${settings.globalEnabled} '
+          '· slots=${settings.slots.length}');
 
-      // Cancel any previously-scheduled break notifications. We
-      // touch only the schedule ID range (100..399), leaving any
-      // tray-resident test notifications (IDs 1..3) untouched.
       await _cancelAllScheduled();
+      _l('scheduleAll: cancelled previous batch');
 
-      // If the global switch is off, we're done — no schedules.
       if (!settings.globalEnabled) {
-        debugPrint('scheduleAll: global OFF → 0 schedules');
+        _l('scheduleAll: GLOBAL OFF → 0 schedules');
         return;
       }
 
       var count = 0;
+      var failed = 0;
       for (final slot in settings.slots) {
-        if (!slot.enabled) continue;
-        await _ensureChannel(slot, settings.vibrate, settings.flashLed);
-
+        if (!slot.enabled) {
+          _l('  slot ${slot.id} "${slot.label}" DISABLED — skip');
+          continue;
+        }
+        try {
+          await _ensureChannel(slot, settings.vibrate, settings.flashLed);
+        } catch (e) {
+          _l('  slot ${slot.id} channel FAILED: $e');
+          failed++;
+          continue;
+        }
         for (final day in Weekday.values) {
           if (!settings.isDayEnabled(day)) continue;
-          await _scheduleSlotOnDay(
-              slot, day, settings.vibrate, settings.flashLed);
-          count++;
+          try {
+            await _scheduleSlotOnDay(
+                slot, day, settings.vibrate, settings.flashLed);
+            count++;
+          } catch (e) {
+            _l('  slot ${slot.id}/${day.label} schedule FAILED: $e');
+            failed++;
+          }
         }
       }
-      debugPrint('scheduleAll: $count schedules created');
+      _l('scheduleAll END · created=$count · failed=$failed');
     } catch (e, st) {
-      debugPrint('scheduleAll FAILED: $e\n$st');
+      _l('scheduleAll FATAL: $e');
+      debugPrint('$st');
     }
   }
 
@@ -316,7 +377,7 @@ class NotificationService {
       // Repeat weekly at the same weekday + hh:mm.
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
     );
-    debugPrint('  scheduled id=$id ${slot.label} @ $firstFire');
+    _l('  scheduled id=$id "${slot.label}" @ $firstFire');
   }
 
   /// First TZDateTime in the future that lands on `dartWeekday` at the
@@ -385,7 +446,11 @@ class NotificationService {
   }
 }
 
-/// Shared NotificationService instance via Riverpod.
+/// Shared NotificationService instance via Riverpod. Wires in the
+/// LogService so scheduling / fire events show up on the Diagnostics
+/// screen even in release builds (where debugPrint is invisible).
 final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
+  final svc = NotificationService();
+  svc.log = ref.read(logServiceProvider);
+  return svc;
 });

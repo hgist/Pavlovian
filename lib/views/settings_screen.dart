@@ -39,6 +39,7 @@ import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/menu_icons.dart';
+import 'diagnostics_screen.dart';
 import 'dialogs/edit_duration_sheet.dart';
 import 'dialogs/edit_label_dialog.dart';
 import 'dialogs/edit_sound_sheet.dart';
@@ -132,12 +133,22 @@ class _Header extends ConsumerWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                Text(
-                  'Pavlovian v${appVersion.version}',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 11,
-                    color: AppColors.inkMuted,
-                    letterSpacing: 0.4,
+                // Long-press the version line to open Diagnostics —
+                // hidden because end-users don't need it.
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onLongPress: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DiagnosticsScreen(),
+                    ),
+                  ),
+                  child: Text(
+                    'Pavlovian v${appVersion.version}',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 11,
+                      color: AppColors.inkMuted,
+                      letterSpacing: 0.4,
+                    ),
                   ),
                 ),
               ],

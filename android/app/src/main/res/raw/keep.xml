@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tells R8 / aapt2 not to strip our bundled notification sounds when
+     resource shrinking runs in release mode. Without this, R8 can't see
+     that we reference these files by string name at runtime (via
+     RawResourceAndroidNotificationSound("chime") etc.) and silently
+     drops them — Samsung then falls back to its own default ringtone
+     (Spaceline), which is exactly the bug we hit on the S10. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/bell,@raw/chime,@raw/ping,@raw/soft" />

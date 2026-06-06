@@ -39,6 +39,16 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 still runs in release even with isMinifyEnabled = false
+            // (just doesn't shrink). Our rules MUST be applied either way
+            // because Gson reflection breaks without them. Setting minify
+            // explicitly here also lets us trim 4–5 MB off the APK.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
