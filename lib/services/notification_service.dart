@@ -209,6 +209,19 @@ class NotificationService {
     return granted ?? true;
   }
 
+  /// Request both permissions needed for notifications to work.
+  /// Safe to call on every startup — each call is a no-op when the
+  /// permission is already granted:
+  ///   1. POST_NOTIFICATIONS (Android 13+) — shows an OS dialog.
+  ///   2. SCHEDULE_EXACT_ALARM (Android 12+) — opens the system
+  ///      Settings page only when not yet granted; no-op otherwise.
+  /// Without both, scheduled break notifications are silently dropped.
+  Future<void> ensurePermissions() async {
+    await initialize();
+    await requestPermission();
+    await requestExactAlarmPermission();
+  }
+
   // ── Channels ────────────────────────────────────────────────────
 
   /// Build the channel ID for a (slot, sound, vibrate, led) combo.

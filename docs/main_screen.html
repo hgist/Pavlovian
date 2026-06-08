@@ -75,14 +75,15 @@
     margin-top: 2px;
   }
 
-  /* ── Day chips ── */
+  /* ── Day chips — spread evenly across full screen width (v1.5.19) ── */
   .day-chips {
-    display: flex; gap: 6px;
-    padding: 6px 14px 0;
-    overflow-x: auto;
+    display: flex; gap: 4px;
+    padding: 6px 10px 0;
   }
   .day-chip {
-    padding: 3px 10px;
+    flex: 1;
+    text-align: center;
+    padding: 4px 0;
     border: 2px solid var(--ink);
     border-radius: 999px;
     font-family: 'Patrick Hand', cursive;
@@ -166,12 +167,13 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px; color: var(--ink-muted);
   }
+  /* ~10% larger in v1.5.19 (padding 9/3 → 11/5, font 12 → 14). */
   .btn-start {
-    padding: 3px 9px;
+    padding: 5px 11px;
     border: 1.5px solid var(--ink);
-    border-radius: 8px;
+    border-radius: 9px;
     font-family: 'Caveat', cursive;
-    font-size: 12px; font-weight: 600;
+    font-size: 14px; font-weight: 600;
     letter-spacing: .3px;
     cursor: pointer; background: transparent;
   }
@@ -205,8 +207,8 @@
     <div class="day-chip">Tue</div>
     <div class="day-chip">Wed</div>
     <div class="day-chip">Thu</div>
-    <div class="day-chip off">Fri</div>
-    <div class="day-chip off">Sat</div>
+    <div class="day-chip">Fri</div>
+    <div class="day-chip">Sat</div>
   </div>
 
   <!-- Day master card -->
@@ -239,7 +241,7 @@
         <div class="slot-status">every enabled day</div>
       </div>
       <button class="btn-start">&#9654; start</button>
-      <span class="edit-chevron" style="margin-left:6px">edit ›</span>
+
     </div>
 
     <!-- Slot 2 -->
@@ -254,7 +256,7 @@
         <div class="slot-status">every enabled day</div>
       </div>
       <button class="btn-start">&#9654; start</button>
-      <span class="edit-chevron" style="margin-left:6px">edit ›</span>
+
     </div>
 
     <!-- Slot 3 -->
@@ -269,7 +271,7 @@
         <div class="slot-status">every enabled day</div>
       </div>
       <button class="btn-start">&#9654; start</button>
-      <span class="edit-chevron" style="margin-left:6px">edit ›</span>
+
     </div>
 
   </div>

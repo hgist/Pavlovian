@@ -40,6 +40,8 @@ class _StubNotificationService implements NotificationService {
   @override
   Future<void> cancelBreakEnd(int slotId, Weekday day) async {}
   @override
+  Future<void> ensurePermissions() async {}
+  @override
   noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 

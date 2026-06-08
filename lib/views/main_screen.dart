@@ -20,6 +20,7 @@ import '../theme/app_theme.dart';
 import '../models/app_settings.dart';
 import '../models/break_slot.dart';
 import '../models/weekday.dart';
+import '../services/notification_service.dart';
 import '../viewmodels/countdown_provider.dart';
 import '../viewmodels/selected_day_provider.dart';
 import '../viewmodels/settings_provider.dart';
@@ -116,12 +117,20 @@ class _LoadedScreenState extends ConsumerState<_LoadedScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState s) {
-    // When the user comes back to the app (e.g. from tapping a
-    // notification's action), re-read countdowns from disk so the
-    // running MM:SS shows up immediately.
     if (s == AppLifecycleState.resumed) {
+      // Re-read countdowns from disk so the running MM:SS shows up
+      // immediately when the user returns from a notification tap.
       // ignore: discarded_futures
       ref.read(countdownProvider.notifier).refreshFromDisk();
+
+      // Re-run scheduleAll() in case the user just granted
+      // SCHEDULE_EXACT_ALARM in Settings and came back — without this
+      // the permission is now held but no alarms are registered yet.
+      final settings = ref.read(settingsProvider).value;
+      if (settings != null) {
+        // ignore: discarded_futures
+        ref.read(notificationServiceProvider).scheduleAll(settings);
+      }
     }
   }
 

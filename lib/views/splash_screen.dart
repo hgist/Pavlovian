@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/app_version.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/bell_icon.dart';
@@ -257,6 +258,14 @@ class _SplashGateState extends ConsumerState<SplashGate> {
       settingsFuture,
       Future<void>.delayed(widget.minDuration),
     ]);
+
+    // Request both permissions needed for scheduled notifications.
+    // POST_NOTIFICATIONS shows an OS dialog overlay; SCHEDULE_EXACT_ALARM
+    // navigates to Settings only when not yet granted (no-op otherwise).
+    // Doing this here — after settings are loaded but before MainScreen
+    // appears — means the very first scheduleAll() call already has the
+    // permissions it needs.
+    await ref.read(notificationServiceProvider).ensurePermissions();
 
     // `mounted` guards against the widget being disposed mid-await
     // (e.g., test tear-down, hot-restart). Without this we'd risk
