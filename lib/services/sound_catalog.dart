@@ -29,6 +29,14 @@ class SoundCatalog {
   /// All sounds bundled with the app. Order matters — this is the
   /// order shown in the picker.
   static const List<SoundEntry> all = [
+    // Rooster is the factory-default start-of-break sound — listed
+    // first so the picker pre-selects it visually for new users.
+    // Attribution: Ribhav Agrawal @ pixabay.com (see Settings footer).
+    SoundEntry(
+      name: 'Rooster',
+      assetPath: 'assets/sounds/rooster.mp3',
+      rawResource: 'rooster',
+    ),
     SoundEntry(
       name: 'Chime',
       assetPath: 'assets/sounds/chime.wav',
@@ -48,6 +56,14 @@ class SoundCatalog {
       name: 'Soft',
       assetPath: 'assets/sounds/soft.wav',
       rawResource: 'soft',
+    ),
+    // Cuckoo is the factory-default end-of-break sound — placed last
+    // in the picker but referenced by kDefaultEndSoundName so fresh
+    // installs hear "cuckoo" when a break-duration timer expires.
+    SoundEntry(
+      name: 'Cuckoo',
+      assetPath: 'assets/sounds/cuckoo.wav',
+      rawResource: 'cuckoo',
     ),
   ];
 

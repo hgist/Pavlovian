@@ -45,8 +45,27 @@ class PavlovianDrawer extends ConsumerWidget {
             const Spacer(),
             // ── Footer ───────────────────────────────────────────
             const _DashedDivider(),
+            // Attribution for the bundled sounds — sits above the
+            // version line so anyone curious about the defaults finds
+            // the credits instantly. Rooster = factory start-of-break;
+            // cuckoo = factory end-of-break.
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+              child: Text(
+                'rooster sound attribute to\nRibhav Agrawal @ pixabay.com'
+                '\n\ncuckoo sound attribute to\nMonkay @ freesound.org',
+                style: GoogleFonts.caveat(
+                  fontSize: 13,
+                  color: AppColors.inkMuted,
+                  letterSpacing: 0.2,
+                  height: 1.2,
+                ),
+              ),
+            ),
+            // Separator between credits block and version line.
+            const _DashedDivider(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
               child: Text(
                 appVersion.display,
                 style: GoogleFonts.jetBrainsMono(

@@ -321,21 +321,26 @@ class _DayChipsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Opacity(
       opacity: globalEnabled ? 1.0 : 0.5,
-      child: SizedBox(
-        height: 36,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
-          itemCount: Weekday.values.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 6),
-          itemBuilder: (_, i) {
-            final day = Weekday.values[i];
-            return DayChip(
-              day: day,
-              isActive: day == today,
-              onTap: day.isWorking ? () => onSelectDay(day) : null,
-            );
-          },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
+        // 7 equal-width cells so the chips spread evenly across the
+        // screen — no horizontal scroll, no left-clustering. Each chip
+        // fills its cell width so wider glyphs ('M','W') don't make
+        // some chips look almost circular while others look like ovals.
+        child: Row(
+          children: [
+            for (final day in Weekday.values)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: DayChip(
+                    day: day,
+                    isActive: day == today,
+                    onTap: day.isWorking ? () => onSelectDay(day) : null,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

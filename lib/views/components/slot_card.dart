@@ -156,23 +156,12 @@ class SlotCard extends StatelessWidget {
 
             // ── Start / Clear button (hidden when dim, greyed when
             //     viewing a non-current day) ─────────────────────────
-            if (!dim) ...[
+            if (!dim)
               _BreakButton(
                 running: running,
                 enabled: countdownEnabled,
                 onTap: countdownEnabled ? onStartClear : null,
               ),
-              const SizedBox(width: 6),
-            ],
-
-            // ── Edit chevron ──────────────────────────────────────
-            Text(
-              'edit ›',
-              style: GoogleFonts.caveat(
-                fontSize: 15,
-                color: AppColors.inkMuted,
-              ),
-            ),
           ],
         ),
       ),
@@ -201,11 +190,12 @@ class _BreakButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: enabled ? onTap : null,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+          // ~10% bigger overall: padding 9/3 → 11/5, font 12 → 14.
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
           decoration: BoxDecoration(
             color: running ? AppColors.terracotta : Colors.transparent,
             border: Border.all(color: AppColors.ink, width: 1.5),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(9),
             boxShadow: running
                 ? const [
                     BoxShadow(
@@ -219,7 +209,7 @@ class _BreakButton extends StatelessWidget {
           child: Text(
             running ? '■ clear' : '▶ start',
             style: GoogleFonts.caveat(
-              fontSize: 12,
+              fontSize: 14,
               color: AppColors.ink,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,

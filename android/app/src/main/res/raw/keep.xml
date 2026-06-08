@@ -6,4 +6,4 @@
      drops them — Samsung then falls back to its own default ringtone
      (Spaceline), which is exactly the bug we hit on the S10. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@raw/bell,@raw/chime,@raw/ping,@raw/soft" />
+    tools:keep="@raw/bell,@raw/chime,@raw/cuckoo,@raw/ping,@raw/rooster,@raw/soft" />

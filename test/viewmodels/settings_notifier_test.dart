@@ -245,8 +245,9 @@ void main() {
 
       await n.setSlotSound(1, 'Bell');
       expect(c.read(settingsProvider).value!.slots[0].soundName, 'Bell');
-      // Other slots untouched
-      expect(c.read(settingsProvider).value!.slots[1].soundName, 'Chime');
+      // Other slots untouched — still on the factory default.
+      expect(c.read(settingsProvider).value!.slots[1].soundName,
+          kDefaultSoundName);
     });
 
     test('toggleVibrate flips and persists', () async {

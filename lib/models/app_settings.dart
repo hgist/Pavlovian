@@ -9,12 +9,14 @@ import 'break_time.dart';
 import 'weekday.dart';
 
 /// Default alert sound — applied to every slot on first install and
-/// on "Reset All to Defaults".
-const String kDefaultSoundName = 'Chime';
+/// on "Reset All to Defaults". Attribution for the rooster crow goes
+/// in the Settings footer (assets/sounds/rooster.mp3).
+const String kDefaultSoundName = 'Rooster';
 
 /// Default end-of-break sound — intentionally different from the slot
 /// default so users distinguish "break time" vs "break over" by ear.
-const String kDefaultEndSoundName = 'Soft';
+/// Whimsical cuckoo pairs nicely with the rooster start-of-break.
+const String kDefaultEndSoundName = 'Cuckoo';
 
 /// Minute step for slot times and durations. 1 = single-minute precision
 /// (useful for testing — quick "fire in 1 min" verification). Raise back

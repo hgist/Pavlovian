@@ -41,9 +41,16 @@ class EditSoundSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<SoundPick>(
       context: context,
       backgroundColor: AppColors.paper,
-      isScrollControlled: false,
+      // `true` so the sheet can grow past the default ~50% screen cap
+      // we hit once the catalog reached 6 sounds + "More sounds…".
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      // Cap at 80% of the screen so the title still peeks above the
+      // sheet, letting the user know what's on top before dragging.
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
       ),
       builder: (_) => EditSoundSheet(
         currentSound: currentName,
@@ -127,21 +134,35 @@ class _EditSoundSheetState extends ConsumerState<EditSoundSheet> {
             ),
             const SizedBox(height: 14),
 
-            // Bundled sounds
-            for (final sound in SoundCatalog.all)
-              _SoundRow(
-                sound: sound,
-                selected: _selectedUri == null && sound.name == _selectedName,
-                onTap: () => _onTapBundled(sound),
-              ),
+            // The sound list scrolls if it overflows so Cancel / Save
+            // always stay visible at the bottom. Without Flexible +
+            // SingleChildScrollView, longer catalogs push the buttons
+            // off-screen on shorter devices.
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Bundled sounds
+                    for (final sound in SoundCatalog.all)
+                      _SoundRow(
+                        sound: sound,
+                        selected: _selectedUri == null &&
+                            sound.name == _selectedName,
+                        onTap: () => _onTapBundled(sound),
+                      ),
 
-            // System / device ringtone picker entry. When the user has
-            // a system sound currently picked, show its title here so
-            // they can see the live selection.
-            _SystemSoundRow(
-              selected: _selectedUri != null,
-              title: _selectedUri != null ? _selectedName : 'More sounds…',
-              onTap: _openSystemPicker,
+                    // System / device ringtone picker entry.
+                    _SystemSoundRow(
+                      selected: _selectedUri != null,
+                      title: _selectedUri != null
+                          ? _selectedName
+                          : 'More sounds…',
+                      onTap: _openSystemPicker,
+                    ),
+                  ],
+                ),
+              ),
             ),
 
             const SizedBox(height: 14),

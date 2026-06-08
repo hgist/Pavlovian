@@ -45,15 +45,19 @@ class DayChip extends StatelessWidget {
       );
     }
 
-    // Working day pill (Sun–Thu) — tappable
+    // Working day pill (Sun–Sat) — tappable. The Container fills
+    // its parent's available width so every chip in the row is an
+    // identical oval, regardless of glyph width (M, W vs S, T, F).
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
               color: isActive ? AppColors.ink : Colors.transparent,
               border: Border.all(color: AppColors.ink, width: 2),
@@ -68,8 +72,10 @@ class DayChip extends StatelessWidget {
                     ]
                   : null,
             ),
+            alignment: Alignment.center,
             child: Text(
               day.label,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: isActive ? AppColors.paper : AppColors.ink,

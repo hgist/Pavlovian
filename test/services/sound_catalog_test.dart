@@ -6,16 +6,23 @@ import 'package:pavlovian/services/sound_catalog.dart';
 
 void main() {
   group('SoundCatalog', () {
-    test('lists all four bundled sounds in order', () {
+    test('lists all bundled sounds in order (Rooster first, Cuckoo last)',
+        () {
       final names = SoundCatalog.all.map((s) => s.name).toList();
-      expect(names, ['Chime', 'Bell', 'Ping', 'Soft']);
+      expect(names, ['Rooster', 'Chime', 'Bell', 'Ping', 'Soft', 'Cuckoo']);
     });
 
     test('every entry has matching asset path and raw resource name', () {
       for (final s in SoundCatalog.all) {
         expect(s.assetPath, startsWith('assets/sounds/'));
-        expect(s.assetPath, endsWith('${s.rawResource}.wav'));
-        // Android raw resource names must be lowercase / no spaces
+        // Bundled formats vary — wav for the originals, mp3 for rooster.
+        // Just assert the basename (sans extension) equals rawResource.
+        final fileName = s.assetPath.split('/').last;
+        final basename = fileName.contains('.')
+            ? fileName.substring(0, fileName.lastIndexOf('.'))
+            : fileName;
+        expect(basename, s.rawResource);
+        // Android raw resource names must be lowercase / no spaces.
         expect(s.rawResource, matches(RegExp(r'^[a-z][a-z0-9_]*$')));
       }
     });

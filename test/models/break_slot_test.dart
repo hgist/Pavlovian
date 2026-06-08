@@ -106,8 +106,11 @@ void main() {
       expect(defaults.slots[2].durationMinutes, 20);
     });
 
-    test('all slots default to Chime', () {
-      expect(defaults.slots.every((s) => s.soundName == 'Chime'), true);
+    test('all slots default to the factory default sound', () {
+      expect(
+        defaults.slots.every((s) => s.soundName == kDefaultSoundName),
+        true,
+      );
     });
 
     test('all slots enabled by default', () {
