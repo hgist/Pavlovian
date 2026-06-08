@@ -84,14 +84,17 @@ class AppSettings {
   factory AppSettings.defaults({String soundName = kDefaultSoundName}) {
     return AppSettings(
       globalEnabled: true,
+      // Weekend (Fri / Sat) defaults to OFF so fresh installs don't
+      // surprise the user with a Saturday-morning rooster crow. Any
+      // day can still be toggled on from Settings → Working Days.
       perDayEnabled: const {
         Weekday.sun: true,
         Weekday.mon: true,
         Weekday.tue: true,
         Weekday.wed: true,
         Weekday.thu: true,
-        Weekday.fri: true,
-        Weekday.sat: true,
+        Weekday.fri: false,
+        Weekday.sat: false,
       },
       slots: [
         BreakSlot(

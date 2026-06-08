@@ -92,10 +92,14 @@ void main() {
     });
 
     test('decodes per-day map back to Weekday keys', () {
-      final json = AppSettings.defaults().toJson();
+      final original = AppSettings.defaults();
+      final json = original.toJson();
       final restored = AppSettings.fromJson(json);
+      // Round-trip must preserve every key + its flag, not the
+      // hardcoded "true" the assertion used pre-Fri/Sat-off defaults.
       for (final d in Weekday.values) {
-        expect(restored.perDayEnabled[d], true, reason: '$d in map');
+        expect(restored.perDayEnabled[d], original.perDayEnabled[d],
+            reason: '$d round-trip');
       }
     });
   });

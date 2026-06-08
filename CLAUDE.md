@@ -75,6 +75,14 @@ A timer fires only when **all three** are on:
 All 7 days are configurable (no hard Fri/Sat exclusion — that was an
 earlier design that got dropped). Days are stored per-day in `perDayEnabled`.
 
+**Factory default for the weekend: Fri and Sat are OFF.** Sun–Thu are
+ON. A fresh install / "Reset All to Defaults" lands this way. Users can
+toggle Fri or Sat ON manually in Settings → Working Days at any time
+(useful for one-off testing or atypical workweeks). When discussing
+"the working days," mean Sun–Thu by default — but never assume the user
+can't enable the weekend; the choice is theirs and is always one tap
+away.
+
 ### Per-break countdown
 Each slot card has a `▶ start` / `■ clear` button. Start schedules a
 one-shot end-of-break notification at `now + slot.durationMinutes` and
@@ -302,8 +310,9 @@ Note that the wireframes reflect the *original* design and have not
 been updated for every shipped iteration. Treat them as the **enduring
 design contract** (look, structure, philosophy); trust the live code
 for fine details that have evolved (e.g. the original `+` FAB and
-"edit ›" chevron were both removed; all 7 days are now configurable
-instead of the original Sun–Fri).
+"edit ›" chevron were both removed; all 7 days are now individually
+configurable, with Sun–Thu defaulting ON and Fri–Sat defaulting OFF
+instead of the original Sun–Fri fixed schedule).
 
 | File                 | Screen / state                                |
 |----------------------|-----------------------------------------------|

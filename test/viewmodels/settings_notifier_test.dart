@@ -113,10 +113,14 @@ void main() {
       final n = c.read(settingsProvider.notifier);
       await c.read(settingsProvider.future);
 
+      // Per v1.5.20 defaults, Fri/Sat start OFF so the expected
+      // pre-toggle state varies by day.
+      const offByDefault = {Weekday.fri, Weekday.sat};
       for (final day in Weekday.values) {
-        expect(c.read(settingsProvider).value!.isDayEnabled(day), true);
+        final startOn = !offByDefault.contains(day);
+        expect(c.read(settingsProvider).value!.isDayEnabled(day), startOn);
         await n.toggleDay(day);
-        expect(c.read(settingsProvider).value!.isDayEnabled(day), false);
+        expect(c.read(settingsProvider).value!.isDayEnabled(day), !startOn);
         await n.toggleDay(day); // flip back so the next iteration is clean
       }
     });

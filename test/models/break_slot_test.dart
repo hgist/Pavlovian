@@ -117,10 +117,17 @@ void main() {
       expect(defaults.slots.every((s) => s.enabled), true);
     });
 
-    test('all 7 days enabled by default', () {
+    test('Sun-Thu default ON, Fri / Sat default OFF', () {
+      const onByDefault = {
+        Weekday.sun,
+        Weekday.mon,
+        Weekday.tue,
+        Weekday.wed,
+        Weekday.thu,
+      };
       for (final d in Weekday.values) {
-        expect(defaults.isDayEnabled(d), true,
-            reason: '$d should default to on');
+        expect(defaults.isDayEnabled(d), onByDefault.contains(d),
+            reason: '$d should default to ${onByDefault.contains(d)}');
       }
     });
 
@@ -162,9 +169,14 @@ void main() {
       }
     });
 
-    test('all 7 days fire when all three layers ON', () {
+    test('Sun-Thu fire when all three layers ON; Fri/Sat stay off', () {
+      // Per the v1.5.20 defaults, Fri/Sat are OFF out of the box so
+      // willFire returns false for them even when global + slot are ON.
+      const offByDefault = {Weekday.fri, Weekday.sat};
       for (final d in Weekday.values) {
-        expect(settings.willFire(d, slot), true, reason: '$d should fire');
+        expect(settings.willFire(d, slot), !offByDefault.contains(d),
+            reason:
+                offByDefault.contains(d) ? '$d off by default' : '$d should fire');
       }
     });
   });
