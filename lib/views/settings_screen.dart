@@ -778,7 +778,7 @@ class _TestNotificationRow extends ConsumerWidget {
           ),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: null, // for debug — restore: onTap: fireTest
+            onTap: fireTest,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
