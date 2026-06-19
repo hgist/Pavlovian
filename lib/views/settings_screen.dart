@@ -722,6 +722,7 @@ class _TestNotificationRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appSettings = ref.watch(settingsProvider).value!;
 
+    // for debug — re-enable by passing fireTest to onTap below
     Future<void> fireTest() async {
       final svc = ref.read(notificationServiceProvider);
       await svc.fireTest(
@@ -730,12 +731,12 @@ class _TestNotificationRow extends ConsumerWidget {
         appSettings.flashLed,
         soundUri: appSettings.testSoundUri,
       );
-      final count = await svc.pendingCount();
+      final count = await svc.pendingCount(); // for debug — scheduled count
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Test fired (${appSettings.testSoundName}) · $count scheduled',
+            'Test fired (${appSettings.testSoundName}) · $count scheduled', // for debug
             style: GoogleFonts.patrickHand(fontSize: 14),
           ),
           duration: const Duration(seconds: 3),
@@ -776,7 +777,7 @@ class _TestNotificationRow extends ConsumerWidget {
           ),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: fireTest,
+            onTap: null, // for debug — restore: onTap: fireTest
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(

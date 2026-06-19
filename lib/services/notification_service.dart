@@ -238,7 +238,7 @@ class NotificationService {
     // R8 had stripped our chime/bell/.wav raw resources. Android refuses
     // to change a channel's sound after creation, so the only way out is
     // a brand-new channel ID — hence the rev bump here.
-    return 'pavlovian_s${slot.id}_${soundKey}'
+    return 'pavlovian_s${slot.id}_$soundKey'
         '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}_r2';
   }
 
