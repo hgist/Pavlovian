@@ -137,11 +137,12 @@ class _Header extends ConsumerWidget {
                 // hidden because end-users don't need it.
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onLongPress: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const DiagnosticsScreen(),
-                    ),
-                  ),
+                  // for debug — uncomment to re-enable Diagnostics via long-press:
+                  // onLongPress: () => Navigator.of(context).push(
+                  //   MaterialPageRoute(
+                  //     builder: (_) => const DiagnosticsScreen(),
+                  //   ),
+                  // ),
                   child: Text(
                     'Pavlovian v${appVersion.version}',
                     style: GoogleFonts.jetBrainsMono(
