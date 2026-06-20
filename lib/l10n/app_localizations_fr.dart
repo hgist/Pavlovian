@@ -169,13 +169,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Paramètres réinitialisés aux valeurs par défaut.';
 
   @override
-  String get morning_break_default => 'Pause du matin';
+  String get slot_label_default_1 => 'Pause du matin';
 
   @override
-  String get lunch_break_default => 'Pause déjeuner';
+  String get slot_label_default_2 => 'Pause déjeuner';
 
   @override
-  String get afternoon_break_default => 'Pause de l\'après-midi';
+  String get slot_label_default_3 => 'Pause de l\'après-midi';
 
   @override
   String get splash_loading_text => 'chargement…';
@@ -347,4 +347,61 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get error_screen_prefix => 'Impossible de charger les paramètres:\n';
+
+  @override
+  String get day_sun_short => 'Dim';
+
+  @override
+  String get day_mon_short => 'Lun';
+
+  @override
+  String get day_tue_short => 'Mar';
+
+  @override
+  String get day_wed_short => 'Mer';
+
+  @override
+  String get day_thu_short => 'Jeu';
+
+  @override
+  String get day_fri_short => 'Ven';
+
+  @override
+  String get day_sat_short => 'Sam';
+
+  @override
+  String get day_sun_full => 'Dimanche';
+
+  @override
+  String get day_mon_full => 'Lundi';
+
+  @override
+  String get day_tue_full => 'Mardi';
+
+  @override
+  String get day_wed_full => 'Mercredi';
+
+  @override
+  String get day_thu_full => 'Jeudi';
+
+  @override
+  String get day_fri_full => 'Vendredi';
+
+  @override
+  String get day_sat_full => 'Samedi';
+
+  @override
+  String get section_break_slots_title => '① Créneaux de pause';
+
+  @override
+  String get section_working_days_title => '② Jours de travail';
+
+  @override
+  String get section_notifications_title => '③ Notifications';
+
+  @override
+  String get section_language_title => '④ Langue';
+
+  @override
+  String get section_reset_title => '⑤ Réinitialiser';
 }

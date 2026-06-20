@@ -168,13 +168,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Configuración reiniciada a valores predeterminados.';
 
   @override
-  String get morning_break_default => 'Descanso matutino';
+  String get slot_label_default_1 => 'Descanso matutino';
 
   @override
-  String get lunch_break_default => 'Descanso del almuerzo';
+  String get slot_label_default_2 => 'Descanso del almuerzo';
 
   @override
-  String get afternoon_break_default => 'Descanso vespertino';
+  String get slot_label_default_3 => 'Descanso vespertino';
 
   @override
   String get splash_loading_text => 'cargando…';
@@ -345,4 +345,61 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get error_screen_prefix => 'No se pudo cargar la configuración:\n';
+
+  @override
+  String get day_sun_short => 'Dom';
+
+  @override
+  String get day_mon_short => 'Lun';
+
+  @override
+  String get day_tue_short => 'Mar';
+
+  @override
+  String get day_wed_short => 'Mié';
+
+  @override
+  String get day_thu_short => 'Jue';
+
+  @override
+  String get day_fri_short => 'Vie';
+
+  @override
+  String get day_sat_short => 'Sáb';
+
+  @override
+  String get day_sun_full => 'Domingo';
+
+  @override
+  String get day_mon_full => 'Lunes';
+
+  @override
+  String get day_tue_full => 'Martes';
+
+  @override
+  String get day_wed_full => 'Miércoles';
+
+  @override
+  String get day_thu_full => 'Jueves';
+
+  @override
+  String get day_fri_full => 'Viernes';
+
+  @override
+  String get day_sat_full => 'Sábado';
+
+  @override
+  String get section_break_slots_title => '① Espacios de descanso';
+
+  @override
+  String get section_working_days_title => '② Días de trabajo';
+
+  @override
+  String get section_notifications_title => '③ Notificaciones';
+
+  @override
+  String get section_language_title => '④ Idioma';
+
+  @override
+  String get section_reset_title => '⑤ Reiniciar';
 }

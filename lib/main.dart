@@ -16,6 +16,7 @@ import 'l10n/app_localizations.dart';
 import 'services/app_version.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
+import 'viewmodels/settings_provider.dart';
 import 'views/splash_screen.dart';
 
 /// Root navigator key — let non-widget code (e.g. the foreground
@@ -49,7 +50,7 @@ Future<void> main() async {
   ));
 }
 
-class PavlovianApp extends StatelessWidget {
+class PavlovianApp extends ConsumerWidget {
   /// How long the splash screen stays visible on cold start before
   /// transitioning to the main screen. Defaults to 2 seconds in
   /// production; tests can pass `Duration.zero`.
@@ -60,12 +61,22 @@ class PavlovianApp extends StatelessWidget {
     this.splashDuration = const Duration(seconds: 2),
   });
 
+  Locale? _parseLocaleCode(String code) {
+    if (code == 'auto') return null;
+    final parts = code.split('_');
+    return Locale(parts[0], parts.length > 1 ? parts[1] : null);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(settingsProvider);
+    final selectedLocaleCode = settingsAsync.value?.selectedLocaleCode ?? 'auto';
+
     return MaterialApp(
       title: 'Pavlovian',
       navigatorKey: rootNavigatorKey,
       debugShowCheckedModeBanner: false,
+      locale: _parseLocaleCode(selectedLocaleCode),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

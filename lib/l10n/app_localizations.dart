@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_ru.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,6 +97,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('ru'),
     Locale('es'),
     Locale('fr'),
   ];
@@ -400,23 +402,23 @@ abstract class AppLocalizations {
   /// **'Settings reset to defaults.'**
   String get settings_reset_snackbar;
 
-  /// No description provided for @morning_break_default.
+  /// No description provided for @slot_label_default_1.
   ///
   /// In en, this message translates to:
   /// **'Morning Break'**
-  String get morning_break_default;
+  String get slot_label_default_1;
 
-  /// No description provided for @lunch_break_default.
+  /// No description provided for @slot_label_default_2.
   ///
   /// In en, this message translates to:
   /// **'Lunch Break'**
-  String get lunch_break_default;
+  String get slot_label_default_2;
 
-  /// No description provided for @afternoon_break_default.
+  /// No description provided for @slot_label_default_3.
   ///
   /// In en, this message translates to:
   /// **'Afternoon Break'**
-  String get afternoon_break_default;
+  String get slot_label_default_3;
 
   /// No description provided for @splash_loading_text.
   ///
@@ -711,6 +713,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load settings:\n'**
   String get error_screen_prefix;
+
+  /// No description provided for @day_sun_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get day_sun_short;
+
+  /// No description provided for @day_mon_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get day_mon_short;
+
+  /// No description provided for @day_tue_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get day_tue_short;
+
+  /// No description provided for @day_wed_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get day_wed_short;
+
+  /// No description provided for @day_thu_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get day_thu_short;
+
+  /// No description provided for @day_fri_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get day_fri_short;
+
+  /// No description provided for @day_sat_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get day_sat_short;
+
+  /// No description provided for @day_sun_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get day_sun_full;
+
+  /// No description provided for @day_mon_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get day_mon_full;
+
+  /// No description provided for @day_tue_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get day_tue_full;
+
+  /// No description provided for @day_wed_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get day_wed_full;
+
+  /// No description provided for @day_thu_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get day_thu_full;
+
+  /// No description provided for @day_fri_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get day_fri_full;
+
+  /// No description provided for @day_sat_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get day_sat_full;
+
+  /// No description provided for @section_break_slots_title.
+  ///
+  /// In en, this message translates to:
+  /// **'① Break Slots'**
+  String get section_break_slots_title;
+
+  /// No description provided for @section_working_days_title.
+  ///
+  /// In en, this message translates to:
+  /// **'② Working Days'**
+  String get section_working_days_title;
+
+  /// No description provided for @section_notifications_title.
+  ///
+  /// In en, this message translates to:
+  /// **'③ Notifications'**
+  String get section_notifications_title;
+
+  /// No description provided for @section_language_title.
+  ///
+  /// In en, this message translates to:
+  /// **'④ Language'**
+  String get section_language_title;
+
+  /// No description provided for @section_reset_title.
+  ///
+  /// In en, this message translates to:
+  /// **'⑤ Reset'**
+  String get section_reset_title;
 }
 
 class _AppLocalizationsDelegate
@@ -724,7 +840,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'es', 'fr'].contains(locale.languageCode);
+      <String>['en', 'es', 'fr', 'ru'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -739,6 +855,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEs();
     case 'fr':
       return AppLocalizationsFr();
+    case 'ru':
+      return AppLocalizationsRu();
   }
 
   throw FlutterError(

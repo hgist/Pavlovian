@@ -184,6 +184,13 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     ));
   }
 
+  /// Change the app language/locale.
+  Future<void> setLocaleCode(String localeCode) async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(selectedLocaleCode: localeCode));
+  }
+
   /// Reset all settings to defaults. Preserves the user's currently-
   /// chosen test sound — slot defaults are rebuilt using that sound
   /// so the alert tone stays consistent across reset.

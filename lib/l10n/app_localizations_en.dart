@@ -164,13 +164,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_reset_snackbar => 'Settings reset to defaults.';
 
   @override
-  String get morning_break_default => 'Morning Break';
+  String get slot_label_default_1 => 'Morning Break';
 
   @override
-  String get lunch_break_default => 'Lunch Break';
+  String get slot_label_default_2 => 'Lunch Break';
 
   @override
-  String get afternoon_break_default => 'Afternoon Break';
+  String get slot_label_default_3 => 'Afternoon Break';
 
   @override
   String get splash_loading_text => 'loading…';
@@ -337,4 +337,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get error_screen_prefix => 'Couldn\'t load settings:\n';
+
+  @override
+  String get day_sun_short => 'Sun';
+
+  @override
+  String get day_mon_short => 'Mon';
+
+  @override
+  String get day_tue_short => 'Tue';
+
+  @override
+  String get day_wed_short => 'Wed';
+
+  @override
+  String get day_thu_short => 'Thu';
+
+  @override
+  String get day_fri_short => 'Fri';
+
+  @override
+  String get day_sat_short => 'Sat';
+
+  @override
+  String get day_sun_full => 'Sunday';
+
+  @override
+  String get day_mon_full => 'Monday';
+
+  @override
+  String get day_tue_full => 'Tuesday';
+
+  @override
+  String get day_wed_full => 'Wednesday';
+
+  @override
+  String get day_thu_full => 'Thursday';
+
+  @override
+  String get day_fri_full => 'Friday';
+
+  @override
+  String get day_sat_full => 'Saturday';
+
+  @override
+  String get section_break_slots_title => '① Break Slots';
+
+  @override
+  String get section_working_days_title => '② Working Days';
+
+  @override
+  String get section_notifications_title => '③ Notifications';
+
+  @override
+  String get section_language_title => '④ Language';
+
+  @override
+  String get section_reset_title => '⑤ Reset';
 }

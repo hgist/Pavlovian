@@ -50,6 +50,15 @@ class SlotCard extends StatelessWidget {
     required this.l10n,
   });
 
+  String _getDisplayLabel() {
+    return switch (slot.label) {
+      'Morning Break' => l10n.slot_label_default_1,
+      'Lunch Break' => l10n.slot_label_default_2,
+      'Afternoon Break' => l10n.slot_label_default_3,
+      _ => slot.label,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final dim = !dayActuallyOn || !slot.enabled;
@@ -115,7 +124,7 @@ class SlotCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${slot.durationMinutes} min',
+                  '${slot.durationMinutes}${l10n.duration_suffix}',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 9,
                     color: AppColors.inkMuted,
@@ -133,7 +142,7 @@ class SlotCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    slot.label,
+                    _getDisplayLabel(),
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.patrickHand(
                       fontSize: 14,

@@ -43,6 +43,7 @@ import 'components/menu_icons.dart';
 import 'dialogs/edit_duration_sheet.dart';
 import 'dialogs/edit_label_dialog.dart';
 import 'dialogs/edit_sound_sheet.dart';
+import 'dialogs/select_language_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -54,6 +55,7 @@ class SettingsScreen extends ConsumerWidget {
     // `!` (force-unwrap) rather than `??` to surface a clear error
     // if our assumption is ever violated.
     final settings = ref.watch(settingsProvider).value!;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -64,14 +66,16 @@ class SettingsScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),
                 children: [
-                  const _SectionHeader('① Break Slots'),
+                  _SectionHeader(l10n.section_break_slots_title),
                   ...settings.slots.map((s) => _SlotCard(slot: s)),
                   const _AddBreakButton(),
-                  const _SectionHeader('② Working Days'),
+                  _SectionHeader(l10n.section_working_days_title),
                   _WorkingDaysCard(settings: settings),
-                  const _SectionHeader('③ Notifications'),
+                  _SectionHeader(l10n.section_notifications_title),
                   _NotificationsCard(settings: settings),
-                  const _SectionHeader('④ Reset'),
+                  _SectionHeader(l10n.section_language_title),
+                  _LanguageCard(settings: settings),
+                  _SectionHeader(l10n.section_reset_title),
                   const _ResetCard(),
                 ],
               ),
@@ -230,9 +234,19 @@ class _SlotCard extends ConsumerWidget {
   final BreakSlot slot;
   const _SlotCard({required this.slot});
 
+  String _getDisplayLabel(AppLocalizations l10n) {
+    return switch (slot.label) {
+      'Morning Break' => l10n.slot_label_default_1,
+      'Lunch Break' => l10n.slot_label_default_2,
+      'Afternoon Break' => l10n.slot_label_default_3,
+      _ => slot.label,
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(settingsProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
@@ -293,7 +307,7 @@ class _SlotCard extends ConsumerWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      slot.label,
+                      _getDisplayLabel(l10n),
                       style: GoogleFonts.architectsDaughter(
                         fontSize: 15,
                         color: AppColors.ink,
@@ -567,7 +581,7 @@ class _WorkingDaysCard extends StatelessWidget {
                 children: [
                   for (final day in Weekday.values)
                     _SettingsDayPill(
-                      label: day.label,
+                      day: day,
                       enabled: settings.isDayEnabled(day),
                       onTap: () => notifier.toggleDay(day),
                     ),
@@ -590,14 +604,27 @@ class _WorkingDaysCard extends StatelessWidget {
 }
 
 class _SettingsDayPill extends StatelessWidget {
-  final String label;
+  final Weekday day;
   final bool enabled;
   final VoidCallback? onTap;
   const _SettingsDayPill({
-    required this.label,
+    required this.day,
     required this.enabled,
     this.onTap,
   });
+
+  String _getLocalizedDayLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (day) {
+      Weekday.sun => l10n.day_sun_short,
+      Weekday.mon => l10n.day_mon_short,
+      Weekday.tue => l10n.day_tue_short,
+      Weekday.wed => l10n.day_wed_short,
+      Weekday.thu => l10n.day_thu_short,
+      Weekday.fri => l10n.day_fri_short,
+      Weekday.sat => l10n.day_sat_short,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -614,7 +641,7 @@ class _SettingsDayPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          label,
+          _getLocalizedDayLabel(context),
           style: enabled
               ? GoogleFonts.patrickHand(
                   fontSize: 13,
@@ -879,7 +906,89 @@ class _ToggleRow extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// ④ Reset danger card
+// ④ Language selection card
+// ─────────────────────────────────────────────────────────────────
+class _LanguageCard extends ConsumerWidget {
+  final AppSettings settings;
+  const _LanguageCard({required this.settings});
+
+  String _getLanguageLabel(String localeCode) {
+    return switch (localeCode) {
+      'auto' => 'Device Default',
+      'en' => 'English',
+      'ru' => 'Русский',
+      'es' => 'Español',
+      'fr' => 'Français',
+      _ => localeCode,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(settingsProvider.notifier);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        final selected = await SelectLanguageSheet.show(
+          context,
+          currentLocaleCode: settings.selectedLocaleCode,
+        );
+        if (selected != null && selected != settings.selectedLocaleCode) {
+          await notifier.setLocaleCode(selected);
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.paperLight,
+          border: Border.all(color: AppColors.ink, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.12),
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Language',
+                style: GoogleFonts.patrickHand(
+                  fontSize: 14,
+                  color: AppColors.ink,
+                ),
+              ),
+            ),
+            Text(
+              _getLanguageLabel(settings.selectedLocaleCode),
+              style: GoogleFonts.patrickHand(
+                fontSize: 14,
+                color: AppColors.terracotta,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '›',
+              style: GoogleFonts.caveat(
+                fontSize: 18,
+                color: AppColors.inkHairline,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ⑤ Reset danger card
 // ─────────────────────────────────────────────────────────────────
 class _ResetCard extends ConsumerWidget {
   const _ResetCard();

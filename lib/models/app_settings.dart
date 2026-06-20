@@ -62,6 +62,11 @@ class AppSettings {
   /// means use the bundled resource named by [endSoundName].
   final String? endSoundUri;
 
+  /// Language locale code ('en', 'es', 'fr', etc.). When 'auto' or null,
+  /// the app follows the device locale. When set to a specific code,
+  /// forces that language in the UI.
+  final String selectedLocaleCode;
+
   const AppSettings({
     required this.globalEnabled,
     required this.perDayEnabled,
@@ -72,6 +77,7 @@ class AppSettings {
     this.testSoundUri,
     required this.endSoundName,
     this.endSoundUri,
+    this.selectedLocaleCode = 'auto',
   });
 
   /// Factory defaults.
@@ -123,6 +129,7 @@ class AppSettings {
       flashLed: false,
       testSoundName: soundName,
       endSoundName: kDefaultEndSoundName,
+      selectedLocaleCode: 'auto',
     );
   }
 
@@ -136,6 +143,7 @@ class AppSettings {
     Object? testSoundUri = _undefinedSettings,
     String? endSoundName,
     Object? endSoundUri = _undefinedSettings,
+    String? selectedLocaleCode,
   }) {
     return AppSettings(
       globalEnabled: globalEnabled ?? this.globalEnabled,
@@ -151,6 +159,7 @@ class AppSettings {
       endSoundUri: identical(endSoundUri, _undefinedSettings)
           ? this.endSoundUri
           : endSoundUri as String?,
+      selectedLocaleCode: selectedLocaleCode ?? this.selectedLocaleCode,
     );
   }
 
@@ -199,6 +208,7 @@ class AppSettings {
         if (testSoundUri != null) 'testSoundUri': testSoundUri,
         'endSoundName': endSoundName,
         if (endSoundUri != null) 'endSoundUri': endSoundUri,
+        'selectedLocaleCode': selectedLocaleCode,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -223,6 +233,8 @@ class AppSettings {
       // Fallback for older installs whose JSON predates endSoundName.
       endSoundName: json['endSoundName'] as String? ?? kDefaultEndSoundName,
       endSoundUri: json['endSoundUri'] as String?,
+      // Fallback for older installs whose JSON predates selectedLocaleCode.
+      selectedLocaleCode: json['selectedLocaleCode'] as String? ?? 'auto',
     );
   }
 }

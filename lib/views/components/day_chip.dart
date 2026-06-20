@@ -10,6 +10,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import '../../models/weekday.dart';
 
@@ -25,6 +26,19 @@ class DayChip extends StatelessWidget {
     this.onTap,
   });
 
+  String _getLocalizedDayLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (day) {
+      Weekday.sun => l10n.day_sun_short,
+      Weekday.mon => l10n.day_mon_short,
+      Weekday.tue => l10n.day_tue_short,
+      Weekday.wed => l10n.day_wed_short,
+      Weekday.thu => l10n.day_thu_short,
+      Weekday.fri => l10n.day_fri_short,
+      Weekday.sat => l10n.day_sat_short,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     // Non-working day → struck-through, non-tappable. With
@@ -34,7 +48,7 @@ class DayChip extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         child: Text(
-          day.label,
+          _getLocalizedDayLabel(context),
           style: GoogleFonts.jetBrainsMono(
             fontSize: 13,
             color: AppColors.inkHairline,
@@ -74,7 +88,7 @@ class DayChip extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              day.label,
+              _getLocalizedDayLabel(context),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

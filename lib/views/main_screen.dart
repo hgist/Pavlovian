@@ -380,6 +380,18 @@ class _DayMasterCard extends StatelessWidget {
     required this.l10n,
   });
 
+  String _getLocalizedDayName() {
+    return switch (today) {
+      Weekday.sun => l10n.day_sun_full,
+      Weekday.mon => l10n.day_mon_full,
+      Weekday.tue => l10n.day_tue_full,
+      Weekday.wed => l10n.day_wed_full,
+      Weekday.thu => l10n.day_thu_full,
+      Weekday.fri => l10n.day_fri_full,
+      Weekday.sat => l10n.day_sat_full,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     // Effective on-state: card looks "active" only when both global
@@ -415,7 +427,7 @@ class _DayMasterCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${today.fullName}${l10n.day_master_card_label}',
+                    '${_getLocalizedDayName()}${l10n.day_master_card_label}',
                     style: GoogleFonts.patrickHand(
                       fontSize: 15,
                       color: AppColors.ink,
