@@ -4,6 +4,7 @@
 // added later without restructuring.
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -36,7 +37,7 @@ class PavlovianDrawer extends ConsumerWidget {
             // ── Items ────────────────────────────────────────────
             _DrawerItem(
               icon: const GearIcon(size: 22),
-              label: 'Settings',
+              label: AppLocalizations.of(context)!.drawer_settings_item,
               onTap: () => _handleSettings(context),
             ),
 

@@ -6,6 +6,7 @@
 //   if (newName != null) { /* apply */ }
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_theme.dart';
@@ -62,6 +63,7 @@ class _EditLabelDialogState extends State<_EditLabelDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: AppColors.paperLight,
       shape: const RoundedRectangleBorder(
@@ -71,7 +73,7 @@ class _EditLabelDialogState extends State<_EditLabelDialog> {
       titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
       contentPadding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
       title: Text(
-        'Rename slot',
+        l10n.edit_label_dialog_title,
         style: GoogleFonts.architectsDaughter(
           fontSize: 18,
           color: AppColors.ink,
@@ -96,7 +98,7 @@ class _EditLabelDialogState extends State<_EditLabelDialog> {
           focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: AppColors.terracotta, width: 2),
           ),
-          hintText: 'e.g. Morning Break',
+          hintText: l10n.edit_label_dialog_hint,
           hintStyle: GoogleFonts.patrickHand(
             fontSize: 16,
             color: AppColors.inkHairline,
@@ -108,7 +110,7 @@ class _EditLabelDialogState extends State<_EditLabelDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            'cancel',
+            l10n.cancel_button,
             style: GoogleFonts.caveat(
               fontSize: 16,
               color: AppColors.inkMuted,
@@ -119,7 +121,7 @@ class _EditLabelDialogState extends State<_EditLabelDialog> {
         TextButton(
           onPressed: _save,
           child: Text(
-            'save',
+            l10n.edit_label_save_button,
             style: GoogleFonts.caveat(
               fontSize: 16,
               color: AppColors.warning,

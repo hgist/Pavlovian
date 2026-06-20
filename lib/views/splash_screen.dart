@@ -10,6 +10,7 @@
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/app_version.dart';
@@ -109,7 +110,7 @@ class _CenterBranding extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            'every day · configurable',
+            AppLocalizations.of(context)!.splash_working_days_badge,
             style: GoogleFonts.jetBrainsMono(
               fontSize: 10,
               color: AppColors.inkMuted,
@@ -206,7 +207,7 @@ class _BottomLoading extends ConsumerWidget {
         Transform.rotate(
           angle: -1.5 * math.pi / 180, // -1.5°
           child: Text(
-            'loading…',
+            AppLocalizations.of(context)!.splash_loading_text,
             style: GoogleFonts.caveat(
               fontSize: 12,
               color: AppColors.inkHairline,

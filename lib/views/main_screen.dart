@@ -14,6 +14,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -70,11 +71,12 @@ class _ErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('Couldn\'t load settings:\n$error'),
+          child: Text('${l10n.error_screen_prefix}$error'),
         ),
       ),
     );
@@ -152,6 +154,7 @@ class _LoadedScreenState extends ConsumerState<_LoadedScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final settings = widget.settings;
     final today = ref.watch(selectedDayProvider);
     final countdowns = ref.watch(countdownProvider);
@@ -199,8 +202,9 @@ class _LoadedScreenState extends ConsumerState<_LoadedScreen>
               dayEnabled: settings.isDayEnabled(today),
               globalEnabled: settings.globalEnabled,
               onToggleDay: () => settingsNotifier.toggleDay(today),
+              l10n: l10n,
             ),
-            _Legend(globalEnabled: settings.globalEnabled),
+            _Legend(globalEnabled: settings.globalEnabled, l10n: l10n),
             const _DashedSeparator(),
             Expanded(
               child: _SlotList(
@@ -218,6 +222,7 @@ class _LoadedScreenState extends ConsumerState<_LoadedScreen>
                   }
                   setState(() {}); // reflect immediately
                 },
+                l10n: l10n,
               ),
             ),
           ],
@@ -244,13 +249,14 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final dayEnabled = settings.isDayEnabled(today);
     final subtitle = !settings.globalEnabled
-        ? 'all timers off'
+        ? l10n.subtitle_all_timers_off
         : dayEnabled
             ? '${settings.enabledSlotCount} of ${settings.slots.length} '
-                'active · ${today.label}'
-            : 'paused for ${today.label}';
+                '${l10n.subtitle_active_count} · ${today.label}'
+            : '${l10n.subtitle_paused_for} ${today.label}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 14, 14, 6),
@@ -275,7 +281,7 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Timers',
+                  l10n.timers_screen_title,
                   style: GoogleFonts.architectsDaughter(
                     fontSize: 22,
                     color: AppColors.ink,
@@ -297,7 +303,7 @@ class _Header extends StatelessWidget {
               GlobalSwitch(on: settings.globalEnabled, onTap: onToggleGlobal),
               const SizedBox(height: 2),
               Text(
-                settings.globalEnabled ? 'ALL ON' : 'ALL OFF',
+                settings.globalEnabled ? l10n.global_all_on : l10n.global_all_off,
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 9,
                   color: AppColors.inkMuted,
@@ -364,12 +370,14 @@ class _DayMasterCard extends StatelessWidget {
   final bool dayEnabled;
   final bool globalEnabled;
   final VoidCallback onToggleDay;
+  final AppLocalizations l10n;
 
   const _DayMasterCard({
     required this.today,
     required this.dayEnabled,
     required this.globalEnabled,
     required this.onToggleDay,
+    required this.l10n,
   });
 
   @override
@@ -407,7 +415,7 @@ class _DayMasterCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${today.fullName} timers',
+                    '${today.fullName}${l10n.day_master_card_label}',
                     style: GoogleFonts.patrickHand(
                       fontSize: 15,
                       color: AppColors.ink,
@@ -417,8 +425,8 @@ class _DayMasterCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     dayEnabled
-                        ? 'pauses every timer just for today'
-                        : '✕ paused for today',
+                        ? l10n.day_master_card_pauses
+                        : l10n.day_master_card_paused,
                     style: dayEnabled
                         ? GoogleFonts.patrickHand(
                             fontSize: 12, color: AppColors.inkMuted)
@@ -440,7 +448,9 @@ class _DayMasterCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────
 class _Legend extends StatelessWidget {
   final bool globalEnabled;
-  const _Legend({required this.globalEnabled});
+  final AppLocalizations l10n;
+
+  const _Legend({required this.globalEnabled, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -453,7 +463,7 @@ class _Legend extends StatelessWidget {
           child: Transform.rotate(
             angle: -0.035,
             child: Text(
-              '↓ runs on each enabled day',
+              l10n.legend_annotation,
               style: GoogleFonts.caveat(
                 fontSize: 14,
                 color: AppColors.warning,
@@ -518,6 +528,7 @@ class _SlotList extends StatelessWidget {
   final bool countdownEnabled;
   final void Function(int slotId) onToggleSlot;
   final void Function(BreakSlot slot) onStartClear;
+  final AppLocalizations l10n;
 
   const _SlotList({
     required this.settings,
@@ -526,6 +537,7 @@ class _SlotList extends StatelessWidget {
     required this.countdownEnabled,
     required this.onToggleSlot,
     required this.onStartClear,
+    required this.l10n,
   });
 
   @override
@@ -543,6 +555,7 @@ class _SlotList extends StatelessWidget {
           countdownEnabled: countdownEnabled,
           onToggleEnabled: () => onToggleSlot(slot.id),
           onStartClear: () => onStartClear(slot),
+          l10n: l10n,
         );
       },
     );

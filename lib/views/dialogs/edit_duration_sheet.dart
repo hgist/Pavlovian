@@ -9,6 +9,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/app_settings.dart';
@@ -66,6 +67,7 @@ class _EditDurationSheetState extends State<EditDurationSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
@@ -74,7 +76,7 @@ class _EditDurationSheetState extends State<EditDurationSheet> {
           children: [
             // Title
             Text(
-              'Break duration',
+              l10n.edit_duration_sheet_title,
               style: GoogleFonts.architectsDaughter(
                 fontSize: 20,
                 color: AppColors.ink,
@@ -82,7 +84,7 @@ class _EditDurationSheetState extends State<EditDurationSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              '5-minute steps',
+              l10n.edit_duration_sheet_subtitle,
               style: GoogleFonts.patrickHand(
                 fontSize: 12,
                 color: AppColors.inkMuted,
@@ -115,7 +117,7 @@ class _EditDurationSheetState extends State<EditDurationSheet> {
                   for (final m in _options)
                     Center(
                       child: Text(
-                        '$m min',
+                        '$m${l10n.duration_suffix}',
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 18,
                           color: AppColors.ink,
@@ -134,7 +136,7 @@ class _EditDurationSheetState extends State<EditDurationSheet> {
               children: [
                 Expanded(
                   child: _SheetButton(
-                    label: 'cancel',
+                    label: l10n.cancel_button,
                     primary: false,
                     onTap: () => Navigator.of(context).pop(),
                   ),
@@ -142,7 +144,7 @@ class _EditDurationSheetState extends State<EditDurationSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _SheetButton(
-                    label: 'save',
+                    label: l10n.edit_label_save_button,
                     primary: true,
                     onTap: () => Navigator.of(context).pop(_selectedMin),
                   ),

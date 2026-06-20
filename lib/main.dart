@@ -10,7 +10,9 @@
 // to skip the visible splash and go straight to MainScreen.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'l10n/app_localizations.dart';
 import 'services/app_version.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
@@ -64,6 +66,13 @@ class PavlovianApp extends StatelessWidget {
       title: 'Pavlovian',
       navigatorKey: rootNavigatorKey,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: buildAppTheme(),
       home: SplashGate(minDuration: splashDuration),
     );

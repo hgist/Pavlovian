@@ -27,6 +27,7 @@
 //   └────────────────────────────────────────────────────────┘
 
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -39,7 +40,6 @@ import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../viewmodels/settings_provider.dart';
 import 'components/menu_icons.dart';
-import 'diagnostics_screen.dart';
 import 'dialogs/edit_duration_sheet.dart';
 import 'dialogs/edit_label_dialog.dart';
 import 'dialogs/edit_sound_sheet.dart';
@@ -126,7 +126,7 @@ class _Header extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Settings',
+                  AppLocalizations.of(context)!.settings_screen_title,
                   style: GoogleFonts.architectsDaughter(
                     fontSize: 20,
                     color: AppColors.ink,
@@ -301,7 +301,7 @@ class _SlotCard extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    'edit label ›',
+                    AppLocalizations.of(context)!.slot_header_edit,
                     style: GoogleFonts.caveat(
                       fontSize: 14,
                       color: AppColors.inkMuted,
@@ -317,19 +317,19 @@ class _SlotCard extends ConsumerWidget {
             child: Column(
               children: [
                 _SettingRow(
-                  label: 'Break time',
+                  label: AppLocalizations.of(context)!.slot_field_break_time,
                   value: slot.time.toDisplay(),
                   mono: true,
                   onTap: () => _editTime(context, notifier),
                 ),
                 _SettingRow(
-                  label: 'Duration',
-                  value: '${slot.durationMinutes} min',
+                  label: AppLocalizations.of(context)!.slot_field_duration,
+                  value: '${slot.durationMinutes}${AppLocalizations.of(context)!.duration_suffix}',
                   mono: true,
                   onTap: () => _editDuration(context, notifier),
                 ),
                 _SettingRow(
-                  label: 'Alert sound',
+                  label: AppLocalizations.of(context)!.slot_field_alert_sound,
                   value: slot.soundName,
                   mono: false,
                   accent: true,
@@ -389,21 +389,21 @@ class _SlotCard extends ConsumerWidget {
           side: BorderSide(color: AppColors.ink, width: 2),
         ),
         title: Text(
-          'Delete "${slot.label}"?',
+          '${AppLocalizations.of(context)!.delete_dialog_title}${slot.label}"?',
           style: GoogleFonts.architectsDaughter(
             fontSize: 18,
             color: AppColors.warning,
           ),
         ),
         content: Text(
-          'This break and its alarms will be removed.',
+          AppLocalizations.of(context)!.delete_dialog_content,
           style: GoogleFonts.patrickHand(fontSize: 14, color: AppColors.ink),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'cancel',
+              AppLocalizations.of(context)!.cancel_button,
               style: GoogleFonts.caveat(
                 fontSize: 16,
                 color: AppColors.inkMuted,
@@ -414,7 +414,7 @@ class _SlotCard extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'delete',
+              AppLocalizations.of(context)!.delete_button,
               style: GoogleFonts.caveat(
                 fontSize: 16,
                 color: AppColors.warning,
@@ -554,7 +554,7 @@ class _WorkingDaysCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Timers fire on checked days only.',
+                AppLocalizations.of(context)!.working_days_description,
                 style: GoogleFonts.patrickHand(
                   fontSize: 12,
                   color: AppColors.inkMuted,
@@ -575,7 +575,7 @@ class _WorkingDaysCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'tap a day to toggle it on / off',
+                AppLocalizations.of(context)!.working_days_help_text,
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 11,
                   color: AppColors.inkMuted,
@@ -663,7 +663,7 @@ class _NotificationsCard extends StatelessWidget {
             children: [
               _TestNotificationRow(),
               _SettingRow(
-                label: 'Alert sound',
+                label: AppLocalizations.of(context)!.alert_sound_label,
                 value: settings.testSoundName,
                 accent: true,
                 onTap: () async {
@@ -681,7 +681,7 @@ class _NotificationsCard extends StatelessWidget {
                 },
               ),
               _SettingRow(
-                label: 'End-of-break sound',
+                label: AppLocalizations.of(context)!.end_of_break_sound_label,
                 value: settings.endSoundName,
                 accent: true,
                 onTap: () async {
@@ -699,13 +699,13 @@ class _NotificationsCard extends StatelessWidget {
                 },
               ),
               _ToggleRow(
-                label: 'Vibrate on alert',
+                label: AppLocalizations.of(context)!.vibrate_label,
                 on: settings.vibrate,
                 isLast: false,
                 onTap: notifier.toggleVibrate,
               ),
               _ToggleRow(
-                label: 'Flash LED on alert',
+                label: AppLocalizations.of(context)!.flash_led_label,
                 on: settings.flashLed,
                 isLast: true,
                 onTap: notifier.toggleFlashLed,
@@ -760,14 +760,14 @@ class _TestNotificationRow extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Test notification',
+                  AppLocalizations.of(context)!.test_notification_label,
                   style: GoogleFonts.patrickHand(
                     fontSize: 14,
                     color: AppColors.ink,
                   ),
                 ),
                 Text(
-                  'fires a sample alert with slot 1\'s sound',
+                  AppLocalizations.of(context)!.test_notification_description,
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 10,
                     color: AppColors.inkMuted,
@@ -793,7 +793,7 @@ class _TestNotificationRow extends ConsumerWidget {
                 ],
               ),
               child: Text(
-                '▶ test',
+                AppLocalizations.of(context)!.test_button,
                 style: GoogleFonts.caveat(
                   fontSize: 14,
                   color: AppColors.ink,
@@ -894,22 +894,21 @@ class _ResetCard extends ConsumerWidget {
           side: BorderSide(color: AppColors.ink, width: 2),
         ),
         title: Text(
-          'Reset all settings?',
+          AppLocalizations.of(context)!.reset_dialog_title,
           style: GoogleFonts.architectsDaughter(
             fontSize: 18,
             color: AppColors.warning,
           ),
         ),
         content: Text(
-          "All times, durations, labels and toggles return to defaults. "
-              "Your selected test sound is kept (slot sounds match it).",
+          AppLocalizations.of(context)!.reset_dialog_content,
           style: GoogleFonts.patrickHand(fontSize: 14, color: AppColors.ink),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'cancel',
+              AppLocalizations.of(context)!.cancel_button,
               style: GoogleFonts.caveat(
                 fontSize: 16,
                 color: AppColors.inkMuted,
@@ -920,7 +919,7 @@ class _ResetCard extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'reset',
+              AppLocalizations.of(context)!.reset_button,
               style: GoogleFonts.caveat(
                 fontSize: 16,
                 color: AppColors.warning,
@@ -937,7 +936,7 @@ class _ResetCard extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Settings reset to defaults.',
+            AppLocalizations.of(context)!.settings_reset_snackbar,
             style: GoogleFonts.patrickHand(fontSize: 14),
           ),
           backgroundColor: AppColors.ink,
@@ -983,7 +982,7 @@ class _ResetCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Reset All to Defaults',
+                      AppLocalizations.of(context)!.reset_title,
                       style: GoogleFonts.architectsDaughter(
                         fontSize: 15,
                         color: AppColors.warning,
@@ -991,7 +990,7 @@ class _ResetCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      'restores times, durations & sounds',
+                      AppLocalizations.of(context)!.reset_description,
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         color: AppColors.warning,
@@ -1017,7 +1016,7 @@ class _ResetCard extends ConsumerWidget {
           child: Transform.rotate(
             angle: -0.017, // ~ -1°
             child: Text(
-              '↑ shows a confirm dialog first',
+              AppLocalizations.of(context)!.reset_annotation,
               style: GoogleFonts.caveat(
                 fontSize: 13,
                 color: AppColors.inkHairline,
@@ -1087,7 +1086,7 @@ class _AddBreakButton extends ConsumerWidget {
         ),
         child: Center(
           child: Text(
-            '+  Add a break',
+            AppLocalizations.of(context)!.add_break_button,
             style: GoogleFonts.caveat(
               fontSize: 17,
               color: AppColors.ink,

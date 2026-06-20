@@ -6,6 +6,7 @@
 //   - dim (day paused OR per-timer off) : faded, no shadow, time struck through
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 import '../../models/break_slot.dart';
@@ -36,6 +37,8 @@ class SlotCard extends StatelessWidget {
   /// other days.
   final bool countdownEnabled;
 
+  final AppLocalizations l10n;
+
   const SlotCard({
     super.key,
     required this.slot,
@@ -44,6 +47,7 @@ class SlotCard extends StatelessWidget {
     this.onToggleEnabled,
     this.onStartClear,
     this.countdownEnabled = true,
+    required this.l10n,
   });
 
   @override
@@ -140,8 +144,8 @@ class SlotCard extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     running
-                        ? '⏱ $runningRemaining left'
-                        : (slot.enabled ? 'every enabled day' : 'off — whole week'),
+                        ? '${l10n.slot_status_running}$runningRemaining${l10n.slot_status_left}'
+                        : (slot.enabled ? l10n.slot_status_enabled : l10n.slot_status_disabled),
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       color: running ? AppColors.warning : AppColors.inkMuted,
@@ -207,7 +211,7 @@ class _BreakButton extends StatelessWidget {
                 : null,
           ),
           child: Text(
-            running ? '■ clear' : '▶ start',
+            running ? AppLocalizations.of(context)!.button_clear : AppLocalizations.of(context)!.button_start,
             style: GoogleFonts.caveat(
               fontSize: 14,
               color: AppColors.ink,

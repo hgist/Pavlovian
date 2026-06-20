@@ -17,6 +17,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -175,9 +176,9 @@ class _DiagnosticsState extends ConsumerState<DiagnosticsScreen> {
     await Clipboard.setData(ClipboardData(text: s));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Diagnostics copied to clipboard'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.diagnostics_copy_snackbar),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -196,13 +197,14 @@ class _DiagnosticsState extends ConsumerState<DiagnosticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         backgroundColor: AppColors.paper,
         foregroundColor: AppColors.ink,
         title: Text(
-          'Diagnostics',
+          l10n.diagnostics_screen_title,
           style: GoogleFonts.architectsDaughter(
             fontSize: 20,
             color: AppColors.ink,
@@ -210,12 +212,12 @@ class _DiagnosticsState extends ConsumerState<DiagnosticsScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: l10n.diagnostics_refresh_tooltip,
             icon: const Icon(Icons.refresh),
             onPressed: _busy ? null : _refresh,
           ),
           IconButton(
-            tooltip: 'Copy',
+            tooltip: l10n.diagnostics_copy_tooltip,
             icon: const Icon(Icons.copy),
             onPressed: _snapshot == null ? null : _copyToClipboard,
           ),

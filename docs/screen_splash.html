@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390">
+<title>Pavlovian — Splash Screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #FBF7EE;
+    --paper-light: #FFFDF7;
+    --ink:         #2A2723;
+    --ink-muted:   #6B655C;
+    --ink-hair:    #B7AD9B;
+    --terracotta:  #E8A07A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F0EEE9;
+    display: flex; justify-content: center; padding: 24px 0;
+    font-family: 'Patrick Hand', cursive;
+    color: var(--ink);
+  }
+  .phone {
+    width: 370px; height: 740px;
+    background: var(--paper-light);
+    border: 3px solid var(--ink);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 rgba(42,39,35,.15);
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 24px 36px;
+  }
+
+  /* ── Top spacer (matches SizedBox.shrink) ── */
+  .spacer { flex: 0; }
+
+  /* ── Centre branding ── */
+  .branding {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0;
+  }
+
+  /* Bell circle with offset dashed ring */
+  .bell-wrap {
+    width: 100px; height: 100px;
+    position: relative; margin-bottom: 16px;
+  }
+  .bell-ring-offset {
+    position: absolute; top: 5px; left: 5px;
+    width: 90px; height: 90px;
+    border: 2px solid var(--ink-hair);
+    border-radius: 50%;
+    border-style: dashed;
+  }
+  .bell-circle {
+    position: absolute; top: 0; left: 0;
+    width: 90px; height: 90px;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 50%;
+    box-shadow: 3px 3px 0 rgba(42,39,35,.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .app-name {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 34px; letter-spacing: .5px;
+    color: var(--ink); line-height: 1.1;
+  }
+  .wavy-wrap { margin: 4px 0 10px; }
+  .tagline {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 15px; color: var(--ink-muted);
+  }
+  .byline {
+    font-family: 'Caveat', cursive;
+    font-size: 13px; color: var(--ink-hair);
+    letter-spacing: .5px; margin-top: 4px;
+  }
+  .badge {
+    margin-top: 14px;
+    padding: 5px 14px;
+    border: 1.5px solid var(--ink-hair);
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--ink-muted);
+    letter-spacing: .5px;
+  }
+
+  /* ── Bottom loading block ── */
+  .loading {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0;
+  }
+  .dots {
+    display: flex; gap: 8px; margin-bottom: 14px;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink-hair);
+    background: transparent;
+  }
+  .dot.active { background: var(--terracotta); border-color: var(--terracotta); }
+  .version {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--ink-hair);
+    letter-spacing: .8px; margin-bottom: 14px;
+  }
+  .loading-txt {
+    font-family: 'Caveat', cursive;
+    font-size: 12px; color: var(--ink-hair);
+    transform: rotate(-1.5deg); display: inline-block;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="spacer"></div>
+
+  <!-- Centre branding -->
+  <div class="branding">
+
+    <!-- Bell in circle -->
+    <div class="bell-wrap">
+      <div class="bell-ring-offset"></div>
+      <div class="bell-circle">
+        <svg width="58" height="58" viewBox="0 0 80 80" fill="none">
+          <!-- Bell body -->
+          <path d="M40,10 C26,10 18,22 17,36 C16,46 14,52 10,58 L70,58 C66,52 64,46 63,36 C62,22 54,10 40,10 Z"
+                fill="rgba(232,160,122,.25)" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Stem -->
+          <path d="M37,10 C37,7 43,7 43,10" stroke="#2A2723" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- Clapper -->
+          <circle cx="40" cy="64" r="4.5" fill="rgba(232,160,122,.5)" stroke="#2A2723" stroke-width="2"/>
+          <!-- Motion dashes right -->
+          <path d="M68,30 C72,28 74,24 73,20" stroke="#2A2723" stroke-width="1.5" stroke-linecap="round"
+                stroke-dasharray="2 2" fill="none"/>
+          <!-- Motion dashes left -->
+          <path d="M12,30 C8,28 6,24 7,20" stroke="#2A2723" stroke-width="1.5" stroke-linecap="round"
+                stroke-dasharray="2 2" fill="none"/>
+          <!-- Highlight squiggle -->
+          <path d="M30,38 Q36,34 42,38 Q48,42 52,38" stroke="rgba(42,39,35,.3)" stroke-width="1"
+                stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="app-name">Pavlovian</div>
+
+    <!-- Wavy terracotta underline -->
+    <div class="wavy-wrap">
+      <svg width="120" height="8" viewBox="0 0 120 8" fill="none">
+        <path d="M0,4 C10,0 20,8 30,4 C40,0 50,8 60,4 C70,0 80,8 90,4 C100,0 110,8 120,4"
+              stroke="#E8A07A" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="tagline">break time reminders</div>
+    <div class="byline">by HST</div>
+    <div class="badge">every day · configurable</div>
+  </div>
+
+  <!-- Bottom loading -->
+  <div class="loading">
+    <div class="dots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="version">Pavlovian v1.5.21</div>
+    <span class="loading-txt">loading…</span>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390">
+<title>Pavlovian — Main · ALL OFF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #FBF7EE;
+    --paper-light: #FFFDF7;
+    --ink:         #2A2723;
+    --ink-muted:   #6B655C;
+    --ink-hair:    #B7AD9B;
+    --terracotta:  #E8A07A;
+    --warning:     #A8401A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F0EEE9;
+    display: flex; justify-content: center; padding: 24px 0;
+    font-family: 'Patrick Hand', cursive; color: var(--ink);
+  }
+  .phone {
+    width: 370px; min-height: 740px;
+    background: var(--paper);
+    border: 3px solid var(--ink); border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 rgba(42,39,35,.15);
+    display: flex; flex-direction: column;
+  }
+  .header { display: flex; align-items: flex-start; padding: 16px 14px 8px 12px; }
+  .hamburger { font-size: 22px; margin-right: 6px; margin-top: 2px; color: var(--ink); }
+  .header-text { flex: 1; }
+  .header-text h1 { font-family: 'Architects Daughter', cursive; font-size: 22px; letter-spacing: .3px; font-weight: normal; }
+  .header-text .sub { font-size: 12px; color: var(--ink-muted); }
+  .all-switch { text-align: center; }
+  .pill-switch { width: 44px; height: 24px; border: 2px solid var(--ink); border-radius: 999px; position: relative; }
+  .pill-switch.off { background: transparent; }
+  .pill-dot { width: 17px; height: 17px; background: var(--ink); border-radius: 50%; position: absolute; top: 1.5px; left: 2px; }
+  .all-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-muted); letter-spacing: .5px; margin-top: 2px; }
+
+  /* Day chips — dimmed when global off */
+  .day-chips { display: flex; gap: 4px; padding: 6px 10px 0; opacity: 0.5; }
+  .day-chip { flex: 1; text-align: center; padding: 4px 0; border: 2px solid var(--ink); border-radius: 999px; font-size: 13px; white-space: nowrap; }
+  .day-chip.active { background: rgba(232,160,122,.25); font-weight: 600; }
+  .day-chip.off { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-hair); text-decoration: line-through; }
+
+  .day-master { margin: 8px 14px; padding: 8px 10px; border: 2px solid var(--ink); border-radius: 14px; background: var(--paper-light); display: flex; align-items: center; gap: 8px; box-shadow: 2px 2px 0 rgba(42,39,35,.15); opacity: 0.5; }
+  .pen-check { width: 20px; height: 20px; border: 2px solid var(--ink); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; background: white; }
+  .pen-check.on { background: rgba(232,160,122,.3); }
+  .day-master-text .title { font-size: 15px; line-height: 1.1; }
+  .day-master-text .hint  { font-size: 12px; color: var(--ink-muted); }
+
+  .legend { padding: 4px 18px; font-family: 'Caveat', cursive; font-size: 14px; color: var(--warning); transform: rotate(-2deg); display: inline-block; opacity: 0.5; }
+  .dashed-sep { margin: 4px 18px 6px; border: none; border-top: 2px dashed var(--ink-hair); }
+
+  .slot-list { flex: 1; padding: 4px 14px 24px; }
+  /* Dim card — opacity 0.5, no shadow, time strikethrough, no button */
+  .slot-card {
+    border: 2px solid var(--ink); border-radius: 14px;
+    background: rgba(42,39,35,.04);
+    padding: 10px 12px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+    opacity: 0.5;
+  }
+  .pen-check-sm { width: 16px; height: 16px; border: 2px solid var(--ink); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 11px; background: rgba(232,160,122,.3); }
+  .slot-time { font-family: 'JetBrains Mono', monospace; font-size: 20px; line-height: 1.1; text-decoration: line-through; }
+  .slot-dur  { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--ink-muted); letter-spacing: .4px; }
+  .slot-info { flex: 1; margin-left: 6px; }
+  .slot-label  { font-size: 14px; line-height: 1.15; }
+  .slot-status { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="header">
+    <span class="hamburger">☰</span>
+    <div class="header-text">
+      <h1>Timers</h1>
+      <div class="sub">all timers off</div>
+    </div>
+    <div class="all-switch">
+      <div class="pill-switch off"><div class="pill-dot"></div></div>
+      <div class="all-label">ALL OFF</div>
+    </div>
+  </div>
+
+  <div class="day-chips">
+    <div class="day-chip">Sun</div>
+    <div class="day-chip">Mon</div>
+    <div class="day-chip">Tue</div>
+    <div class="day-chip">Wed</div>
+    <div class="day-chip active">Thu</div>
+    <div class="day-chip off">Fri</div>
+    <div class="day-chip off">Sat</div>
+  </div>
+
+  <div class="day-master">
+    <div class="pen-check on">&#x2713;</div>
+    <div class="day-master-text">
+      <div class="title">Thursday timers</div>
+      <div class="hint">pauses every timer just for today</div>
+    </div>
+  </div>
+
+  <div style="padding-left:14px"><span class="legend">&darr; runs on each enabled day</span></div>
+  <hr class="dashed-sep">
+
+  <div class="slot-list">
+    <div class="slot-card">
+      <div class="pen-check-sm">&#x2713;</div>
+      <div><div class="slot-time">10:00</div><div class="slot-dur">20 min</div></div>
+      <div class="slot-info"><div class="slot-label">Morning Break</div><div class="slot-status">every enabled day</div></div>
+    </div>
+    <div class="slot-card">
+      <div class="pen-check-sm">&#x2713;</div>
+      <div><div class="slot-time">12:30</div><div class="slot-dur">45 min</div></div>
+      <div class="slot-info"><div class="slot-label">Lunch Break</div><div class="slot-status">every enabled day</div></div>
+    </div>
+    <div class="slot-card">
+      <div class="pen-check-sm">&#x2713;</div>
+      <div><div class="slot-time">15:00</div><div class="slot-dur">20 min</div></div>
+      <div class="slot-info"><div class="slot-label">Afternoon Break</div><div class="slot-status">every enabled day</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
