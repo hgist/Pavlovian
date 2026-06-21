@@ -155,6 +155,21 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(current.copyWith(flashLed: !current.flashLed));
   }
 
+  /// Toggle whether break notifications are sent at all.
+  Future<void> toggleNotifications() async {
+    final current = _current;
+    if (current == null) return;
+    await _update(
+        current.copyWith(notificationsEnabled: !current.notificationsEnabled));
+  }
+
+  /// Toggle whether notifications play a sound.
+  Future<void> toggleSound() async {
+    final current = _current;
+    if (current == null) return;
+    await _update(current.copyWith(soundEnabled: !current.soundEnabled));
+  }
+
   /// Pick the sound used by the manual "▶ test" button.
   /// [newSoundUri] is `null` for bundled sounds.
   Future<void> setTestSound(

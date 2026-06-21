@@ -136,6 +136,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get end_of_break_sound_label => 'Sonido de fin de descanso';
 
   @override
+  String get notifications_enabled_label => 'Mostrar notificaciones';
+
+  @override
+  String get notifications_enabled_description =>
+      'enviar alertas de descanso a la barra de notificaciones';
+
+  @override
+  String get sound_enabled_label => 'Reproducir sonido en alerta';
+
+  @override
+  String get sound_enabled_description =>
+      'reproducir audio cuando se activa una notificación de descanso';
+
+  @override
+  String get both_alerts_off_warning =>
+      'Ambas alertas están desactivadas — para silenciar todos los descansos usa el interruptor TODO APAGADO en la pantalla principal.';
+
+  @override
   String get vibrate_label => 'Vibrar en alerta';
 
   @override

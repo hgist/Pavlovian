@@ -22,6 +22,8 @@ class _StubNotificationService implements NotificationService {
     bool flashLed, {
     required String endSoundName,
     String? endSoundUri,
+    bool soundEnabled = true,
+    bool notificationsEnabled = true,
   }) async {
     scheduleCount++;
   }

@@ -686,8 +686,28 @@ class _NotificationsCard extends StatelessWidget {
       child: Consumer(
         builder: (context, ref, _) {
           final notifier = ref.read(settingsProvider.notifier);
+          final bothOff =
+              !settings.notificationsEnabled && !settings.soundEnabled;
           return Column(
             children: [
+              _ToggleRow(
+                label: AppLocalizations.of(context)!.notifications_enabled_label,
+                description: AppLocalizations.of(context)!
+                    .notifications_enabled_description,
+                on: settings.notificationsEnabled,
+                isLast: false,
+                onTap: notifier.toggleNotifications,
+              ),
+              _ToggleRow(
+                label: AppLocalizations.of(context)!.sound_enabled_label,
+                description:
+                    AppLocalizations.of(context)!.sound_enabled_description,
+                on: settings.soundEnabled,
+                isLast: false,
+                onTap: notifier.toggleSound,
+              ),
+              if (bothOff)
+                _BothAlertsOffWarning(),
               _TestNotificationRow(),
               _SettingRow(
                 label: AppLocalizations.of(context)!.alert_sound_label,
@@ -837,11 +857,13 @@ class _TestNotificationRow extends ConsumerWidget {
 
 class _ToggleRow extends StatelessWidget {
   final String label;
+  final String? description;
   final bool on;
   final bool isLast;
   final VoidCallback? onTap;
   const _ToggleRow({
     required this.label,
+    this.description,
     required this.on,
     required this.isLast,
     this.onTap,
@@ -864,13 +886,33 @@ class _ToggleRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.patrickHand(
-                fontSize: 14,
-                color: AppColors.ink,
-              ),
-            ),
+            child: description != null
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: GoogleFonts.patrickHand(
+                          fontSize: 14,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      Text(
+                        description!,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 10,
+                          color: AppColors.inkMuted,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    label,
+                    style: GoogleFonts.patrickHand(
+                      fontSize: 14,
+                      color: AppColors.ink,
+                    ),
+                  ),
           ),
           // Mini pill toggle
           Container(
@@ -900,6 +942,43 @@ class _ToggleRow extends StatelessWidget {
           ),
         ],
       ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Warning shown when both notificationsEnabled and soundEnabled are off
+// ─────────────────────────────────────────────────────────────────
+class _BothAlertsOffWarning extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.08),
+        border: const Border(
+          bottom: BorderSide(color: Color(0x14000000), width: 1),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CustomPaint(
+            size: const Size(16, 16),
+            painter: _WarningTrianglePainter(),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context)!.both_alerts_off_warning,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

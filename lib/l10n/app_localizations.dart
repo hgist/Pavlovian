@@ -342,6 +342,36 @@ abstract class AppLocalizations {
   /// **'End-of-break sound'**
   String get end_of_break_sound_label;
 
+  /// No description provided for @notifications_enabled_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Show notifications'**
+  String get notifications_enabled_label;
+
+  /// No description provided for @notifications_enabled_description.
+  ///
+  /// In en, this message translates to:
+  /// **'send break alerts to the notification bar'**
+  String get notifications_enabled_description;
+
+  /// No description provided for @sound_enabled_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound on alert'**
+  String get sound_enabled_label;
+
+  /// No description provided for @sound_enabled_description.
+  ///
+  /// In en, this message translates to:
+  /// **'play audio when a break notification fires'**
+  String get sound_enabled_description;
+
+  /// No description provided for @both_alerts_off_warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Both alerts are off — to silence all breaks use the ALL OFF switch on the main screen instead.'**
+  String get both_alerts_off_warning;
+
   /// No description provided for @vibrate_label.
   ///
   /// In en, this message translates to:

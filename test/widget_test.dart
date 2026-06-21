@@ -20,7 +20,9 @@ class _StubNotificationService implements NotificationService {
   @override
   Future<bool> requestPermission() async => true;
   @override
-  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) => 'stub';
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed,
+      {bool soundEnabled = true}) =>
+      'stub';
   @override
   Future<void> fireTest(
       String soundName, bool vibrate, bool flashLed,
@@ -36,6 +38,8 @@ class _StubNotificationService implements NotificationService {
     bool flashLed, {
     required String endSoundName,
     String? endSoundUri,
+    bool soundEnabled = true,
+    bool notificationsEnabled = true,
   }) async {}
   @override
   Future<void> cancelBreakEnd(int slotId, Weekday day) async {}

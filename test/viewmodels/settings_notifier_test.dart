@@ -27,7 +27,9 @@ class _StubNotificationService implements NotificationService {
   Future<bool> requestPermission() async => true;
 
   @override
-  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) => 'stub';
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed,
+      {bool soundEnabled = true}) =>
+      'stub';
 
   @override
   Future<void> fireTest(
@@ -46,6 +48,8 @@ class _StubNotificationService implements NotificationService {
     bool flashLed, {
     required String endSoundName,
     String? endSoundUri,
+    bool soundEnabled = true,
+    bool notificationsEnabled = true,
   }) async {}
 
   @override
@@ -270,6 +274,28 @@ void main() {
       expect(c.read(settingsProvider).value!.flashLed, false);
       await n.toggleFlashLed();
       expect(c.read(settingsProvider).value!.flashLed, true);
+    });
+
+    test('toggleNotifications flips and persists', () async {
+      final c = makeContainer();
+      final n = c.read(settingsProvider.notifier);
+      await c.read(settingsProvider.future);
+      expect(c.read(settingsProvider).value!.notificationsEnabled, true);
+      await n.toggleNotifications();
+      expect(c.read(settingsProvider).value!.notificationsEnabled, false);
+      await n.toggleNotifications();
+      expect(c.read(settingsProvider).value!.notificationsEnabled, true);
+    });
+
+    test('toggleSound flips and persists', () async {
+      final c = makeContainer();
+      final n = c.read(settingsProvider.notifier);
+      await c.read(settingsProvider.future);
+      expect(c.read(settingsProvider).value!.soundEnabled, true);
+      await n.toggleSound();
+      expect(c.read(settingsProvider).value!.soundEnabled, false);
+      await n.toggleSound();
+      expect(c.read(settingsProvider).value!.soundEnabled, true);
     });
 
     test('per-slot updates survive container rebuild (persisted)',

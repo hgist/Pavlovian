@@ -136,6 +136,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get end_of_break_sound_label => 'Son de fin de pause';
 
   @override
+  String get notifications_enabled_label => 'Afficher les notifications';
+
+  @override
+  String get notifications_enabled_description =>
+      'envoyer des alertes de pause dans la barre de notification';
+
+  @override
+  String get sound_enabled_label => 'Jouer un son lors d\'une alerte';
+
+  @override
+  String get sound_enabled_description =>
+      'jouer de l\'audio quand une notification de pause se déclenche';
+
+  @override
+  String get both_alerts_off_warning =>
+      'Les deux alertes sont désactivées — pour silence toutes les pauses, utilisez l\'interrupteur TOUT ÉTEINT sur l\'écran principal.';
+
+  @override
   String get vibrate_label => 'Vibrer en cas d\'alerte';
 
   @override

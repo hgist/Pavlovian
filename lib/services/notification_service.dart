@@ -119,6 +119,8 @@ Future<void> _handleNotificationResponse(NotificationResponse r) async {
     settings.flashLed,
     endSoundName: settings.endSoundName,
     endSoundUri: settings.endSoundUri,
+    soundEnabled: settings.soundEnabled,
+    notificationsEnabled: settings.notificationsEnabled,
   );
 }
 
@@ -229,17 +231,16 @@ class NotificationService {
   /// encoded here, so changing any of them produces a NEW channel.
   /// For system-sound URIs we include a hash so different URIs land
   /// on different channels.
-  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed) {
+  String channelIdFor(BreakSlot slot, bool vibrate, bool flashLed,
+      {bool soundEnabled = true}) {
     final soundKey = slot.soundUri != null
         ? 'u${slot.soundUri!.hashCode.toUnsigned(32).toRadixString(16)}'
         : slot.soundName.toLowerCase();
-    // `r2` suffix forces NEW channels in v1.5.14+. v1.5.13 release built
-    // channels that quietly fell back to Samsung's "Spaceline" because
-    // R8 had stripped our chime/bell/.wav raw resources. Android refuses
-    // to change a channel's sound after creation, so the only way out is
-    // a brand-new channel ID — hence the rev bump here.
+    // `r3` suffix forces NEW channels in v1.6.5+ when soundEnabled changes.
+    // Android refuses to change a channel's sound after creation, so toggling
+    // soundEnabled needs a new channel ID to take effect.
     return 'pavlovian_s${slot.id}_$soundKey'
-        '_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}_r2';
+        '_s${soundEnabled ? 1 : 0}_v${vibrate ? 1 : 0}_l${flashLed ? 1 : 0}_r3';
   }
 
   /// Create the channel for this (slot, sound, vibrate, led) combo.
@@ -248,26 +249,29 @@ class NotificationService {
   Future<void> _ensureChannel(
     BreakSlot slot,
     bool vibrate,
-    bool flashLed,
-  ) async {
+    bool flashLed, {
+    bool soundEnabled = true,
+  }) async {
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin == null) return;
 
-    final AndroidNotificationSound soundSource = slot.soundUri != null
-        ? UriAndroidNotificationSound(slot.soundUri!)
-        : RawResourceAndroidNotificationSound(
-            slot.soundName.toLowerCase(),
-          );
+    final AndroidNotificationSound? soundSource = soundEnabled
+        ? (slot.soundUri != null
+            ? UriAndroidNotificationSound(slot.soundUri!)
+            : RawResourceAndroidNotificationSound(
+                slot.soundName.toLowerCase(),
+              ))
+        : null;
 
     final channel = AndroidNotificationChannel(
-      channelIdFor(slot, vibrate, flashLed),
+      channelIdFor(slot, vibrate, flashLed, soundEnabled: soundEnabled),
       'Pavlovian — slot ${slot.id}',
       description: 'Break reminder for "${slot.label}"',
       importance: Importance.max,
       sound: soundSource,
-      playSound: true,
+      playSound: soundEnabled,
       enableVibration: vibrate,
       enableLights: flashLed,
       ledColor: flashLed ? const Color(0xFFE8A07A) : null,
@@ -341,6 +345,18 @@ class NotificationService {
         return;
       }
 
+      if (!settings.notificationsEnabled && !settings.soundEnabled) {
+        _l('scheduleAll: NOTIFICATIONS AND SOUND BOTH OFF → 0 schedules');
+        return;
+      }
+
+      if (!settings.notificationsEnabled && settings.soundEnabled) {
+        _l('scheduleAll: SOUND ONLY MODE (notifications off, sound on)');
+      }
+      if (settings.notificationsEnabled && !settings.soundEnabled) {
+        _l('scheduleAll: VISUAL ONLY MODE (notifications on, sound off)');
+      }
+
       var count = 0;
       var failed = 0;
       for (final slot in settings.slots) {
@@ -349,7 +365,8 @@ class NotificationService {
           continue;
         }
         try {
-          await _ensureChannel(slot, settings.vibrate, settings.flashLed);
+          await _ensureChannel(slot, settings.vibrate, settings.flashLed,
+              soundEnabled: settings.soundEnabled);
         } catch (e) {
           _l('  slot ${slot.id} channel FAILED: $e');
           failed++;
@@ -358,8 +375,10 @@ class NotificationService {
         for (final day in Weekday.values) {
           if (!settings.isDayEnabled(day)) continue;
           try {
-            await _scheduleSlotOnDay(
-                slot, day, settings.vibrate, settings.flashLed);
+            await _scheduleSlotOnDay(slot, day, settings.vibrate,
+                settings.flashLed,
+                soundEnabled: settings.soundEnabled,
+                notificationsEnabled: settings.notificationsEnabled);
             count++;
           } catch (e) {
             _l('  slot ${slot.id}/${day.label} schedule FAILED: $e');
@@ -409,6 +428,8 @@ class NotificationService {
     bool flashLed, {
     required String endSoundName,
     String? endSoundUri,
+    bool soundEnabled = true,
+    bool notificationsEnabled = true,
   }) async {
     try {
       await initialize();
@@ -425,15 +446,20 @@ class NotificationService {
         soundName: endSoundName,
         soundUri: endSoundUri,
       );
-      await _ensureChannel(endSlot, vibrate, flashLed);
+      await _ensureChannel(endSlot, vibrate, flashLed,
+          soundEnabled: soundEnabled);
       final when = tz.TZDateTime.from(endTime, tz.local);
       await _plugin.zonedSchedule(
         _breakEndId(slot.id, day),
-        slot.label,
-        'Break over — your ${slot.durationMinutes}-minute break has '
-            'ended. Time to head back.',
+        notificationsEnabled ? slot.label : '', // title (empty if notifications OFF)
+        notificationsEnabled
+            ? 'Break over — your ${slot.durationMinutes}-minute break has '
+                'ended. Time to head back.'
+            : '', // body (empty if notifications OFF)
         when,
-        _detailsFor(endSlot, vibrate, flashLed),
+        _detailsFor(endSlot, vibrate, flashLed,
+            soundEnabled: soundEnabled,
+            showNotificationText: notificationsEnabled),
         androidScheduleMode: AndroidScheduleMode.alarmClock,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -475,8 +501,10 @@ class NotificationService {
     BreakSlot slot,
     Weekday day,
     bool vibrate,
-    bool flashLed,
-  ) async {
+    bool flashLed, {
+    bool soundEnabled = true,
+    bool notificationsEnabled = true,
+  }) async {
     final id = _idFor(slot.id, day.index);
     final firstFire = _nextInstanceOf(
       _dartWeekday(day),
@@ -503,11 +531,16 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       id,
-      slot.label, // title = the alert label (user-defined)
-      "Break time — it's ${slot.time.toDisplay()}. "
-          'Enjoy your ${slot.durationMinutes} minutes.',
+      notificationsEnabled ? slot.label : '', // title (empty if notifications OFF)
+      notificationsEnabled
+          ? "Break time — it's ${slot.time.toDisplay()}. "
+              'Enjoy your ${slot.durationMinutes} minutes.'
+          : '', // body (empty if notifications OFF)
       firstFire,
-      _detailsFor(slot, vibrate, flashLed, actions: actions),
+      _detailsFor(slot, vibrate, flashLed,
+          soundEnabled: soundEnabled,
+          showNotificationText: notificationsEnabled,
+          actions: actions),
       // alarmClock = setAlarmClock() under the hood. Same priority
       // as the built-in clock app's alarms — bypasses Doze, battery
       // optimization, Samsung's "sleeping apps" list, and the
@@ -566,11 +599,13 @@ class NotificationService {
     BreakSlot slot,
     bool vibrate,
     bool flashLed, {
+    bool soundEnabled = true,
+    bool showNotificationText = true,
     List<AndroidNotificationAction>? actions,
   }) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        channelIdFor(slot, vibrate, flashLed),
+        channelIdFor(slot, vibrate, flashLed, soundEnabled: soundEnabled),
         'Pavlovian — slot ${slot.id}',
         channelDescription: 'Break reminder',
         importance: Importance.max,
@@ -581,7 +616,7 @@ class NotificationService {
         // flash. Reminder still survives Doze and gets delivered,
         // but is more likely to drive the notification LED.
         category: AndroidNotificationCategory.reminder,
-        playSound: true,
+        playSound: soundEnabled,
         // Channel governs these on Android 8+, but set them here too
         // for pre-O devices. ledOnMs/ledOffMs are REQUIRED whenever
         // lights are enabled (blink cycle) or the plugin throws.
@@ -590,6 +625,8 @@ class NotificationService {
         ledColor: flashLed ? const Color(0xFFE8A07A) : null,
         ledOnMs: flashLed ? 1000 : null,
         ledOffMs: flashLed ? 500 : null,
+        // When showNotificationText=false, show minimal alert (sound only, no text)
+        showWhen: showNotificationText,
         actions: actions,
       ),
     );

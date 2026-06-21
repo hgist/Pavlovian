@@ -136,6 +136,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get end_of_break_sound_label => 'Звук окончания перерыва';
 
   @override
+  String get notifications_enabled_label => 'Показывать уведомления';
+
+  @override
+  String get notifications_enabled_description =>
+      'отправлять оповещения о перерывах в панель уведомлений';
+
+  @override
+  String get sound_enabled_label => 'Воспроизводить звук при оповещении';
+
+  @override
+  String get sound_enabled_description =>
+      'воспроизводить звук при срабатывании уведомления о перерыве';
+
+  @override
+  String get both_alerts_off_warning =>
+      'Оба типа оповещений отключены — для отключения всех перерывов используйте переключатель ВСЁ ВЫКЛ на главном экране.';
+
+  @override
   String get vibrate_label => 'Вибрация при оповещении';
 
   @override

@@ -43,6 +43,8 @@ class AppSettings {
   /// Settings-screen toggles.
   final bool vibrate;
   final bool flashLed;
+  final bool notificationsEnabled;
+  final bool soundEnabled;
 
   /// Display name of the sound used by the manual "▶ test" button.
   final String testSoundName;
@@ -73,6 +75,8 @@ class AppSettings {
     required this.slots,
     required this.vibrate,
     required this.flashLed,
+    this.notificationsEnabled = true,
+    this.soundEnabled = true,
     required this.testSoundName,
     this.testSoundUri,
     required this.endSoundName,
@@ -127,6 +131,8 @@ class AppSettings {
       ],
       vibrate: true,
       flashLed: false,
+      notificationsEnabled: true,
+      soundEnabled: true,
       testSoundName: soundName,
       endSoundName: kDefaultEndSoundName,
       selectedLocaleCode: 'auto',
@@ -139,6 +145,8 @@ class AppSettings {
     List<BreakSlot>? slots,
     bool? vibrate,
     bool? flashLed,
+    bool? notificationsEnabled,
+    bool? soundEnabled,
     String? testSoundName,
     Object? testSoundUri = _undefinedSettings,
     String? endSoundName,
@@ -151,6 +159,8 @@ class AppSettings {
       slots: slots ?? this.slots,
       vibrate: vibrate ?? this.vibrate,
       flashLed: flashLed ?? this.flashLed,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      soundEnabled: soundEnabled ?? this.soundEnabled,
       testSoundName: testSoundName ?? this.testSoundName,
       testSoundUri: identical(testSoundUri, _undefinedSettings)
           ? this.testSoundUri
@@ -204,6 +214,8 @@ class AppSettings {
         'slots': slots.map((s) => s.toJson()).toList(),
         'vibrate': vibrate,
         'flashLed': flashLed,
+        'notificationsEnabled': notificationsEnabled,
+        'soundEnabled': soundEnabled,
         'testSoundName': testSoundName,
         if (testSoundUri != null) 'testSoundUri': testSoundUri,
         'endSoundName': endSoundName,
@@ -227,6 +239,8 @@ class AppSettings {
       slots: slotsList,
       vibrate: json['vibrate'] as bool,
       flashLed: json['flashLed'] as bool,
+      notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
+      soundEnabled: json['soundEnabled'] as bool? ?? true,
       // Fallback for older installs whose JSON predates testSoundName.
       testSoundName: json['testSoundName'] as String? ?? kDefaultSoundName,
       testSoundUri: json['testSoundUri'] as String?,

@@ -133,6 +133,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get end_of_break_sound_label => 'End-of-break sound';
 
   @override
+  String get notifications_enabled_label => 'Show notifications';
+
+  @override
+  String get notifications_enabled_description =>
+      'send break alerts to the notification bar';
+
+  @override
+  String get sound_enabled_label => 'Play sound on alert';
+
+  @override
+  String get sound_enabled_description =>
+      'play audio when a break notification fires';
+
+  @override
+  String get both_alerts_off_warning =>
+      'Both alerts are off — to silence all breaks use the ALL OFF switch on the main screen instead.';
+
+  @override
   String get vibrate_label => 'Vibrate on alert';
 
   @override
