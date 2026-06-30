@@ -44,6 +44,7 @@ import 'dialogs/edit_duration_sheet.dart';
 import 'dialogs/edit_label_dialog.dart';
 import 'dialogs/edit_sound_sheet.dart';
 import 'dialogs/select_language_sheet.dart';
+import 'diagnostics_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -141,12 +142,11 @@ class _Header extends ConsumerWidget {
                 // hidden because end-users don't need it.
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  // for debug — uncomment to re-enable Diagnostics via long-press:
-                  // onLongPress: () => Navigator.of(context).push(
-                  //   MaterialPageRoute(
-                  //     builder: (_) => const DiagnosticsScreen(),
-                  //   ),
-                  // ),
+                  onLongPress: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DiagnosticsScreen(),
+                    ),
+                  ),
                   child: Text(
                     'Pavlovian v${appVersion.version}',
                     style: GoogleFonts.jetBrainsMono(
