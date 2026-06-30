@@ -451,7 +451,7 @@ class NotificationService {
       final when = tz.TZDateTime.from(endTime, tz.local);
       await _plugin.zonedSchedule(
         _breakEndId(slot.id, day),
-        notificationsEnabled ? slot.label : '', // title (empty if notifications OFF)
+        notificationsEnabled ? slot.label : '⏰', // title (minimal if notifications OFF)
         notificationsEnabled
             ? 'Break over — your ${slot.durationMinutes}-minute break has '
                 'ended. Time to head back.'
@@ -531,7 +531,7 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       id,
-      notificationsEnabled ? slot.label : '', // title (empty if notifications OFF)
+      notificationsEnabled ? slot.label : '⏰', // title (minimal if notifications OFF)
       notificationsEnabled
           ? "Break time — it's ${slot.time.toDisplay()}. "
               'Enjoy your ${slot.durationMinutes} minutes.'
