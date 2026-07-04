@@ -115,7 +115,7 @@ class SlotCard extends StatelessWidget {
                 Text(
                   slot.time.toDisplay(),
                   style: GoogleFonts.jetBrainsMono(
-                    fontSize: 20,
+                    fontSize: 23,
                     color: AppColors.ink,
                     height: 1.1,
                     decoration: dim
@@ -126,8 +126,9 @@ class SlotCard extends StatelessWidget {
                 Text(
                   '${slot.durationMinutes}${l10n.duration_suffix}',
                   style: GoogleFonts.jetBrainsMono(
-                    fontSize: 9,
+                    fontSize: 18,
                     color: AppColors.inkMuted,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0.4,
                   ),
                 ),
@@ -143,9 +144,10 @@ class SlotCard extends StatelessWidget {
                 children: [
                   Text(
                     _getDisplayLabel(),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.patrickHand(
-                      fontSize: 14,
+                      fontSize: 16,
                       color: AppColors.ink,
                       height: 1.15,
                     ),
@@ -155,8 +157,10 @@ class SlotCard extends StatelessWidget {
                     running
                         ? '${l10n.slot_status_running}$runningRemaining${l10n.slot_status_left}'
                         : (slot.enabled ? l10n.slot_status_enabled : l10n.slot_status_disabled),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
+                      fontSize: 11,
                       color: running ? AppColors.warning : AppColors.inkMuted,
                       fontWeight:
                           running ? FontWeight.w500 : FontWeight.w400,
@@ -165,7 +169,7 @@ class SlotCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 3),
 
             // ── Start / Clear button (hidden when dim, greyed when
             //     viewing a non-current day) ─────────────────────────
@@ -203,8 +207,7 @@ class _BreakButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: enabled ? onTap : null,
         child: Container(
-          // ~10% bigger overall: padding 9/3 → 11/5, font 12 → 14.
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
           decoration: BoxDecoration(
             color: running ? AppColors.terracotta : Colors.transparent,
             border: Border.all(color: AppColors.ink, width: 1.5),
@@ -222,7 +225,7 @@ class _BreakButton extends StatelessWidget {
           child: Text(
             running ? AppLocalizations.of(context)!.button_clear : AppLocalizations.of(context)!.button_start,
             style: GoogleFonts.caveat(
-              fontSize: 14,
+              fontSize: 19,
               color: AppColors.ink,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,

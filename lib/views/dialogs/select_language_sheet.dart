@@ -6,20 +6,22 @@ class LanguageOption {
   final String code;
   final String label;
   final String nativeLabel;
+  final String flag;
 
   const LanguageOption({
     required this.code,
     required this.label,
     required this.nativeLabel,
+    this.flag = '',
   });
 }
 
 const List<LanguageOption> kAvailableLanguages = [
   LanguageOption(code: 'auto', label: 'Device Default', nativeLabel: 'Device Default'),
-  LanguageOption(code: 'en', label: 'English', nativeLabel: 'English'),
-  LanguageOption(code: 'ru', label: 'Русский', nativeLabel: 'Russian'),
-  LanguageOption(code: 'es', label: 'Español', nativeLabel: 'Spanish'),
-  LanguageOption(code: 'fr', label: 'Français', nativeLabel: 'French'),
+  LanguageOption(code: 'en', label: 'English', nativeLabel: 'English', flag: '🇺🇸'),
+  LanguageOption(code: 'ru', label: 'Русский', nativeLabel: 'Russian', flag: '🇷🇺'),
+  LanguageOption(code: 'es', label: 'Español', nativeLabel: 'Spanish', flag: '🇪🇸'),
+  LanguageOption(code: 'fr', label: 'Français', nativeLabel: 'French', flag: '🇫🇷'),
 ];
 
 class SelectLanguageSheet extends StatelessWidget {
@@ -97,6 +99,13 @@ class SelectLanguageSheet extends StatelessWidget {
                         : Colors.transparent,
                     child: Row(
                       children: [
+                        if (lang.flag.isNotEmpty) ...[
+                          Text(
+                            lang.flag,
+                            style: const TextStyle(fontSize: 26),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

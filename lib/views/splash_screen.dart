@@ -69,7 +69,7 @@ class _CenterBranding extends StatelessWidget {
         Text(
           'Pavlovian',
           style: GoogleFonts.architectsDaughter(
-            fontSize: 34,
+            fontSize: 42,
             color: AppColors.ink,
             letterSpacing: 0.5,
             height: 1.1,
@@ -85,7 +85,7 @@ class _CenterBranding extends StatelessWidget {
         Text(
           'break time reminders',
           style: GoogleFonts.patrickHand(
-            fontSize: 15,
+            fontSize: 19,
             color: AppColors.inkMuted,
           ),
         ),
@@ -95,7 +95,7 @@ class _CenterBranding extends StatelessWidget {
         Text(
           'by HST',
           style: GoogleFonts.caveat(
-            fontSize: 13,
+            fontSize: 17,
             color: AppColors.inkHairline,
             letterSpacing: 0.5,
           ),
@@ -112,7 +112,7 @@ class _CenterBranding extends StatelessWidget {
           child: Text(
             AppLocalizations.of(context)!.splash_working_days_badge,
             style: GoogleFonts.jetBrainsMono(
-              fontSize: 10,
+              fontSize: 13,
               color: AppColors.inkMuted,
               letterSpacing: 0.5,
             ),
@@ -198,7 +198,7 @@ class _BottomLoading extends ConsumerWidget {
         Text(
           appVersion.display,
           style: GoogleFonts.jetBrainsMono(
-            fontSize: 9,
+            fontSize: 11,
             color: AppColors.inkHairline,
             letterSpacing: 0.8,
           ),
@@ -209,7 +209,7 @@ class _BottomLoading extends ConsumerWidget {
           child: Text(
             AppLocalizations.of(context)!.splash_loading_text,
             style: GoogleFonts.caveat(
-              fontSize: 12,
+              fontSize: 15,
               color: AppColors.inkHairline,
             ),
           ),

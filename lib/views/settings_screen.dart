@@ -334,12 +334,16 @@ class _SlotCard extends ConsumerWidget {
                   label: AppLocalizations.of(context)!.slot_field_break_time,
                   value: slot.time.toDisplay(),
                   mono: true,
+                  valueFontSize: 23,
                   onTap: () => _editTime(context, notifier),
                 ),
                 _SettingRow(
                   label: AppLocalizations.of(context)!.slot_field_duration,
                   value: '${slot.durationMinutes}${AppLocalizations.of(context)!.duration_suffix}',
                   mono: true,
+                  valueFontSize: 18,
+                  valueColor: AppColors.inkMuted,
+                  valueFontWeight: FontWeight.w700,
                   onTap: () => _editDuration(context, notifier),
                 ),
                 _SettingRow(
@@ -467,6 +471,9 @@ class _SettingRow extends StatelessWidget {
   final bool accent;
   final bool isLast;
   final VoidCallback? onTap;
+  final double? valueFontSize;
+  final Color? valueColor;
+  final FontWeight? valueFontWeight;
 
   const _SettingRow({
     required this.label,
@@ -475,6 +482,9 @@ class _SettingRow extends StatelessWidget {
     this.accent = false,
     this.isLast = false,
     this.onTap,
+    this.valueFontSize,
+    this.valueColor,
+    this.valueFontWeight,
   });
 
   @override
@@ -497,7 +507,7 @@ class _SettingRow extends StatelessWidget {
             child: Text(
               label,
               style: GoogleFonts.patrickHand(
-                fontSize: 14,
+                fontSize: 17,
                 color: AppColors.ink,
               ),
             ),
@@ -506,13 +516,16 @@ class _SettingRow extends StatelessWidget {
             value,
             style: mono
                 ? GoogleFonts.jetBrainsMono(
-                    fontSize: 14,
-                    color: accent ? AppColors.warning : AppColors.ink,
-                    fontWeight: FontWeight.w500,
+                    fontSize: valueFontSize ?? 17,
+                    color: valueColor ??
+                        (accent ? AppColors.warning : AppColors.ink),
+                    fontWeight: valueFontWeight ?? FontWeight.w500,
                   )
                 : GoogleFonts.patrickHand(
-                    fontSize: 14,
-                    color: accent ? AppColors.warning : AppColors.ink,
+                    fontSize: valueFontSize ?? 17,
+                    color: valueColor ??
+                        (accent ? AppColors.warning : AppColors.ink),
+                    fontWeight: valueFontWeight,
                   ),
           ),
           const SizedBox(width: 4),
@@ -1002,6 +1015,13 @@ class _LanguageCard extends ConsumerWidget {
     };
   }
 
+  String _getFlag(String localeCode) {
+    return kAvailableLanguages
+        .firstWhere((lang) => lang.code == localeCode,
+            orElse: () => const LanguageOption(code: '', label: '', nativeLabel: ''))
+        .flag;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(settingsProvider.notifier);
@@ -1043,6 +1063,13 @@ class _LanguageCard extends ConsumerWidget {
                 ),
               ),
             ),
+            if (_getFlag(settings.selectedLocaleCode).isNotEmpty) ...[
+              Text(
+                _getFlag(settings.selectedLocaleCode),
+                style: const TextStyle(fontSize: 22),
+              ),
+              const SizedBox(width: 6),
+            ],
             Text(
               _getLanguageLabel(settings.selectedLocaleCode),
               style: GoogleFonts.patrickHand(
