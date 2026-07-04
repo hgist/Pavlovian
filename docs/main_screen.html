@@ -155,25 +155,26 @@
   .slot-time-col { display: flex; flex-direction: column; }
   .slot-time {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 20px; line-height: 1.1;
+    font-size: 23px; line-height: 1.1;
   }
   .slot-dur {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; color: var(--ink-muted); letter-spacing: .4px;
+    font-size: 18px; font-weight: 700; color: var(--ink-muted); letter-spacing: .4px;
   }
   .slot-info { flex: 1; margin-left: 6px; }
-  .slot-label { font-size: 14px; line-height: 1.15; }
+  .slot-label { font-size: 16px; line-height: 1.15; }
   .slot-status {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: var(--ink-muted);
+    font-size: 11px; color: var(--ink-muted);
   }
-  /* ~10% larger in v1.5.19 (padding 9/3 → 11/5, font 12 → 14). */
+  /* v1.7.3: bigger button, tighter padding/gap (padding 6/12 → 4/9, font 15 → 19). */
   .btn-start {
-    padding: 5px 11px;
+    padding: 4px 9px;
+    margin-left: -3px;
     border: 1.5px solid var(--ink);
     border-radius: 9px;
     font-family: 'Caveat', cursive;
-    font-size: 14px; font-weight: 600;
+    font-size: 19px; font-weight: 600;
     letter-spacing: .3px;
     cursor: pointer; background: transparent;
   }
@@ -207,8 +208,8 @@
     <div class="day-chip">Tue</div>
     <div class="day-chip">Wed</div>
     <div class="day-chip">Thu</div>
-    <div class="day-chip">Fri</div>
-    <div class="day-chip">Sat</div>
+    <div class="day-chip off">Fri</div>
+    <div class="day-chip off">Sat</div>
   </div>
 
   <!-- Day master card -->

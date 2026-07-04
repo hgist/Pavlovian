@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390">
+<title>Pavlovian — Credits Leaflet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #FBF7EE;
+    --paper-light: #FFFDF7;
+    --ink:         #2A2723;
+    --ink-muted:   #6B655C;
+    --ink-hair:    #B7AD9B;
+    --terracotta:  #E8A07A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F0EEE9;
+    display: flex; justify-content: center; padding: 24px 0;
+    font-family: 'Patrick Hand', cursive;
+    color: var(--ink);
+  }
+  .leaflet {
+    width: 340px;
+    background: var(--paper-light);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 rgba(42,39,35,.15);
+    padding: 28px 26px 22px;
+  }
+
+  /* ── Header: bell + app name ── */
+  .leaflet-header {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    padding-bottom: 18px;
+  }
+  .bell-circle {
+    width: 64px; height: 64px;
+    border: 2.5px solid var(--ink); border-radius: 50%;
+    background: var(--paper);
+    box-shadow: 3px 3px 0 rgba(42,39,35,.15);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .app-name {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 30px; letter-spacing: .4px; color: var(--ink);
+  }
+  .tagline {
+    font-size: 14px; color: var(--ink-muted); margin-top: 2px;
+  }
+  .byline {
+    font-family: 'Caveat', cursive;
+    font-size: 14px; color: var(--ink-hair);
+    letter-spacing: .5px; margin-top: 2px;
+  }
+
+  .dashed-div {
+    border: none; border-top: 1.5px dashed var(--ink-hair);
+    margin: 0 -2px;
+  }
+
+  /* ── Credits ── */
+  .credits-title {
+    font-family: 'Caveat', cursive;
+    font-size: 17px; font-weight: 600; color: var(--terracotta);
+    padding: 18px 0 4px;
+    transform: rotate(-.6deg);
+  }
+  .credit-block {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(42,39,35,.12);
+  }
+  .credit-block:last-child { border-bottom: none; }
+  .credit-icon { font-size: 22px; line-height: 1.3; }
+  .credit-text .sound-name {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 16px; color: var(--ink);
+  }
+  .credit-text .attrib {
+    font-size: 14px; color: var(--ink-muted);
+    line-height: 1.3;
+  }
+  .credit-text .attrib b { color: var(--ink); font-weight: normal; }
+  .credit-text .source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-hair);
+  }
+
+  .version {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--ink-hair);
+    letter-spacing: .8px;
+    padding-top: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="leaflet">
+
+  <!-- Header -->
+  <div class="leaflet-header">
+    <div class="bell-circle">
+      <svg width="40" height="40" viewBox="0 0 80 80" fill="none">
+        <path d="M40,10 C26,10 18,22 17,36 C16,46 14,52 10,58 L70,58 C66,52 64,46 63,36 C62,22 54,10 40,10 Z"
+              fill="rgba(232,160,122,.25)" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37,10 C37,7 43,7 43,10" stroke="#2A2723" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <circle cx="40" cy="64" r="4.5" fill="rgba(232,160,122,.5)" stroke="#2A2723" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="app-name">Pavlovian</div>
+    <div class="tagline">break time reminders</div>
+    <div class="byline">by HST</div>
+  </div>
+
+  <hr class="dashed-div">
+
+  <!-- Sound credits -->
+  <div class="credits-title">♪ sound credits</div>
+
+  <div class="credit-block">
+    <div class="credit-icon">🐓</div>
+    <div class="credit-text">
+      <div class="sound-name">Rooster</div>
+      <div class="attrib">attribute to <b>Ribhav Agrawal</b></div>
+      <div class="source">pixabay.com</div>
+    </div>
+  </div>
+
+  <div class="credit-block">
+    <div class="credit-icon">🐦</div>
+    <div class="credit-text">
+      <div class="sound-name">Cuckoo</div>
+      <div class="attrib">attribute to <b>Monkay</b></div>
+      <div class="source">freesound.org</div>
+    </div>
+  </div>
+
+  <hr class="dashed-div">
+  <div class="version">Pavlovian v1.7.2</div>
+
+</div>
+
+</body>
+</html>

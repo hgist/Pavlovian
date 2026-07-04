@@ -116,12 +116,16 @@
     border-bottom: 1px solid rgba(0,0,0,.08);
   }
   .setting-row:last-child { border-bottom: none; }
-  .setting-row .label { flex: 1; font-size: 14px; }
+  .setting-row .label { flex: 1; font-size: 17px; }
   .setting-row .value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; font-weight: 500;
+    font-size: 17px; font-weight: 500;
   }
   .setting-row .value.accent { color: var(--warning); font-family: 'Patrick Hand', cursive; }
+  /* Break time — matches the Timers screen's time size (v1.7.3). */
+  .setting-row .value.time { font-size: 23px; }
+  /* Duration — bigger + bold gray, matching the Timers screen (v1.7.3). */
+  .setting-row .value.duration { font-size: 18px; font-weight: 700; color: var(--ink-muted); }
   .setting-row .chev {
     font-family: 'Caveat', cursive;
     font-size: 18px; color: var(--ink-hair);
@@ -220,6 +224,29 @@
   .mini-pill.on  .mini-dot { right: 1px; }
   .mini-pill.off .mini-dot { left: 1px; }
 
+  /* ── Language card ── */
+  .lang-card {
+    margin: 6px 14px 10px;
+    padding: 10px 12px;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    background: var(--paper-light);
+    box-shadow: 2px 2px 0 rgba(42,39,35,.12);
+    display: flex; align-items: center;
+    cursor: pointer;
+  }
+  .lang-card .label { flex: 1; font-size: 14px; }
+  .lang-flag { font-size: 22px; margin-right: 6px; }
+  .lang-value {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 14px; font-weight: 500; color: var(--terracotta);
+  }
+  .lang-chev {
+    font-family: 'Caveat', cursive;
+    font-size: 18px; color: var(--ink-hair);
+    margin-left: 4px;
+  }
+
   /* ── Reset card ── */
   .reset-card {
     margin: 6px 14px 6px;
@@ -267,7 +294,7 @@
     <span class="back">&larr;</span>
     <div class="header-text">
       <h1>Settings</h1>
-      <div class="ver">Pavlovian v1.5.19</div>
+      <div class="ver">Pavlovian v1.7.2</div>
     </div>
     <span class="gear">&#9881;</span>
   </div>
@@ -285,12 +312,12 @@
     <div class="slot-rows">
       <div class="setting-row">
         <span class="label">Break time</span>
-        <span class="value">10:00</span>
+        <span class="value time">10:00</span>
         <span class="chev">›</span>
       </div>
       <div class="setting-row">
         <span class="label">Duration</span>
-        <span class="value">20 min</span>
+        <span class="value duration">20 min</span>
         <span class="chev">›</span>
       </div>
       <div class="setting-row">
@@ -311,12 +338,12 @@
     <div class="slot-rows">
       <div class="setting-row">
         <span class="label">Break time</span>
-        <span class="value">12:30</span>
+        <span class="value time">12:30</span>
         <span class="chev">›</span>
       </div>
       <div class="setting-row">
         <span class="label">Duration</span>
-        <span class="value">45 min</span>
+        <span class="value duration">45 min</span>
         <span class="chev">›</span>
       </div>
       <div class="setting-row">
@@ -337,12 +364,12 @@
     <div class="slot-rows">
       <div class="setting-row">
         <span class="label">Break time</span>
-        <span class="value">15:00</span>
+        <span class="value time">15:00</span>
         <span class="chev">›</span>
       </div>
       <div class="setting-row">
         <span class="label">Duration</span>
-        <span class="value">20 min</span>
+        <span class="value duration">20 min</span>
         <span class="chev">›</span>
       </div>
       <div class="setting-row">
@@ -366,8 +393,8 @@
       <div class="day-pill on">Tue</div>
       <div class="day-pill on">Wed</div>
       <div class="day-pill on">Thu</div>
-      <div class="day-pill on">Fri</div>
-      <div class="day-pill on">Sat</div>
+      <div class="day-pill off">Fri</div>
+      <div class="day-pill off">Sat</div>
     </div>
     <div class="wd-foot">tap a day to toggle it on / off</div>
   </div>
@@ -404,8 +431,17 @@
     </div>
   </div>
 
-  <!-- ④ Reset -->
-  <div class="section-hdr"><span>&#9315; Reset</span><hr></div>
+  <!-- ④ Language -->
+  <div class="section-hdr"><span>&#9315; Language</span><hr></div>
+  <div class="lang-card">
+    <span class="label">Language</span>
+    <span class="lang-flag">🇺🇸</span>
+    <span class="lang-value">English</span>
+    <span class="lang-chev">›</span>
+  </div>
+
+  <!-- ⑤ Reset -->
+  <div class="section-hdr"><span>&#9316; Reset</span><hr></div>
   <div class="reset-card">
     <div class="warn-tri">
       <svg viewBox="0 0 22 22" fill="none">
