@@ -100,12 +100,16 @@
     border-bottom: 1px solid rgba(0,0,0,.08);
   }
   .setting-row:last-child { border-bottom: none; }
-  .setting-row .lbl { flex: 1; font-size: 14px; }
+  .setting-row .lbl { flex: 1; font-size: 17px; }
   .setting-row .val {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; font-weight: 500;
+    font-size: 17px; font-weight: 500;
   }
   .setting-row .val.accent { color: var(--warning); font-family: 'Patrick Hand', cursive; font-weight: normal; }
+  /* Break time — matches the Timers screen's time size (v1.7.3). */
+  .setting-row .val.time { font-size: 23px; }
+  /* Duration — bigger + bold gray, matching the Timers screen (v1.7.3). */
+  .setting-row .val.duration { font-size: 18px; font-weight: 700; color: var(--ink-muted); }
   .setting-row .chev { font-family: 'Caveat', cursive; font-size: 18px; color: var(--ink-hair); margin-left: 4px; }
 
   /* ── Add break button ── */
@@ -185,6 +189,24 @@
   .mini-pill.on  .mini-dot { right: 1px; }
   .mini-pill.off .mini-dot { left: 1px; }
 
+  /* ── Language card ── */
+  .lang-card {
+    margin: 6px 14px 10px;
+    padding: 10px 12px;
+    border: 2px solid var(--ink); border-radius: 14px;
+    background: var(--paper-light);
+    box-shadow: 2px 2px 0 rgba(42,39,35,.12);
+    display: flex; align-items: center;
+    cursor: pointer;
+  }
+  .lang-card .lbl { flex: 1; font-size: 14px; }
+  .lang-flag { font-size: 22px; margin-right: 6px; }
+  .lang-value {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 14px; font-weight: 500; color: var(--terracotta);
+  }
+  .lang-chev { font-family: 'Caveat', cursive; font-size: 18px; color: var(--ink-hair); margin-left: 4px; }
+
   /* ── Reset card ── */
   .reset-card {
     margin: 6px 14px 6px;
@@ -214,7 +236,7 @@
     <span class="back">&larr;</span>
     <div class="header-text">
       <h1>Settings</h1>
-      <div class="ver">Pavlovian v1.5.21</div>
+      <div class="ver">Pavlovian v1.7.2</div>
     </div>
     <span class="gear">&#9881;</span>
   </div>
@@ -229,8 +251,8 @@
       <div class="edit-label">edit label ›</div>
     </div>
     <div class="slot-rows">
-      <div class="setting-row"><span class="lbl">Break time</span><span class="val">10:00</span><span class="chev">›</span></div>
-      <div class="setting-row"><span class="lbl">Duration</span><span class="val">20 min</span><span class="chev">›</span></div>
+      <div class="setting-row"><span class="lbl">Break time</span><span class="val time">10:00</span><span class="chev">›</span></div>
+      <div class="setting-row"><span class="lbl">Duration</span><span class="val duration">20 min</span><span class="chev">›</span></div>
       <div class="setting-row"><span class="lbl">Alert sound</span><span class="val accent">Rooster</span><span class="chev">›</span></div>
     </div>
   </div>
@@ -242,8 +264,8 @@
       <div class="edit-label">edit label ›</div>
     </div>
     <div class="slot-rows">
-      <div class="setting-row"><span class="lbl">Break time</span><span class="val">12:30</span><span class="chev">›</span></div>
-      <div class="setting-row"><span class="lbl">Duration</span><span class="val">45 min</span><span class="chev">›</span></div>
+      <div class="setting-row"><span class="lbl">Break time</span><span class="val time">12:30</span><span class="chev">›</span></div>
+      <div class="setting-row"><span class="lbl">Duration</span><span class="val duration">45 min</span><span class="chev">›</span></div>
       <div class="setting-row"><span class="lbl">Alert sound</span><span class="val accent">Rooster</span><span class="chev">›</span></div>
     </div>
   </div>
@@ -255,8 +277,8 @@
       <div class="edit-label">edit label ›</div>
     </div>
     <div class="slot-rows">
-      <div class="setting-row"><span class="lbl">Break time</span><span class="val">15:00</span><span class="chev">›</span></div>
-      <div class="setting-row"><span class="lbl">Duration</span><span class="val">20 min</span><span class="chev">›</span></div>
+      <div class="setting-row"><span class="lbl">Break time</span><span class="val time">15:00</span><span class="chev">›</span></div>
+      <div class="setting-row"><span class="lbl">Duration</span><span class="val duration">20 min</span><span class="chev">›</span></div>
       <div class="setting-row"><span class="lbl">Alert sound</span><span class="val accent">Rooster</span><span class="chev">›</span></div>
     </div>
   </div>
@@ -303,8 +325,17 @@
     </div>
   </div>
 
-  <!-- ④ Reset -->
-  <div class="section-hdr"><span>&#9315; Reset</span><hr></div>
+  <!-- ④ Language -->
+  <div class="section-hdr"><span>&#9315; Language</span><hr></div>
+  <div class="lang-card">
+    <span class="lbl">Language</span>
+    <span class="lang-flag">🇺🇸</span>
+    <span class="lang-value">English</span>
+    <span class="lang-chev">›</span>
+  </div>
+
+  <!-- ⑤ Reset -->
+  <div class="section-hdr"><span>&#9316; Reset</span><hr></div>
   <div class="reset-card">
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
       <path d="M11 3L20 19H2Z" fill="rgba(168,64,26,.1)" stroke="#A8401A" stroke-width="2" stroke-linejoin="round"/>
